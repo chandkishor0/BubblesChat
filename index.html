@@ -14,15 +14,43 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      color: #fff;
+      overflow: hidden;
     }
+
+    /* 🔵 Background Bubbles Animation */
+    .bubbles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .bubbles span {
+      position: absolute;
+      bottom: -150px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      animation: rise 20s infinite;
+    }
+    .bubbles span:nth-child(odd) {
+      background: rgba(255,255,255,0.3);
+    }
+    @keyframes rise {
+      0% { transform: translateY(0) scale(0); }
+      50% { transform: translateY(-50vh) scale(1); }
+      100% { transform: translateY(-100vh) scale(0); }
+    }
+
     #login, #chat {
+      position: relative;
+      z-index: 1;
       background: rgba(0,0,0,0.7);
       padding: 20px;
-      border-radius: 10px;
+      border-radius: 15px;
       width: 90%;
       max-width: 400px;
       text-align: center;
+      color: #fff;
     }
     input, button {
       padding: 10px;
@@ -36,34 +64,60 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #e64a19;
     }
     #messages {
       height: 300px;
       overflow-y: auto;
-      background: white;
+      background: rgba(255,255,255,0.9);
       color: black;
       padding: 10px;
       margin-bottom: 10px;
-      border-radius: 5px;
+      border-radius: 10px;
       text-align: left;
     }
     .msg {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 15px;
       margin: 5px 0;
-      padding: 5px 10px;
-      border-radius: 8px;
+      max-width: 70%;
+      word-wrap: break-word;
+      animation: flipIn 0.5s ease;
     }
     .self {
       background: #d1f5d3;
-      text-align: right;
+      float: right;
+      clear: both;
     }
     .other {
       background: #f5d1d1;
-      text-align: left;
+      float: left;
+      clear: both;
+    }
+
+    /* ✨ Flip Animation */
+    @keyframes flipIn {
+      from { transform: rotateY(90deg); opacity: 0; }
+      to { transform: rotateY(0deg); opacity: 1; }
     }
   </style>
 </head>
 <body>
 
+<!-- 🔵 Background Bubbles -->
+<div class="bubbles">
+  <span style="width:40px;height:40px;left:10%;animation-duration:18s;"></span>
+  <span style="width:25px;height:25px;left:30%;animation-duration:12s;"></span>
+  <span style="width:50px;height:50px;left:50%;animation-duration:20s;"></span>
+  <span style="width:20px;height:20px;left:70%;animation-duration:10s;"></span>
+  <span style="width:35px;height:35px;left:90%;animation-duration:15s;"></span>
+</div>
+
+<!-- 🔑 Login Box -->
 <div id="login">
   <h2>Login</h2>
   <input type="text" id="username" placeholder="Enter your name">
@@ -71,6 +125,7 @@
   <p style="color: yellow; font-size: 14px;">(Only Chand Kishor & Anuradha allowed)</p>
 </div>
 
+<!-- 💬 Chat Box -->
 <div id="chat" style="display:none;">
   <h2 id="welcome"></h2>
   <div id="messages"></div>
@@ -103,6 +158,49 @@
     const username = document.getElementById("username").value.trim();
 
     if(username !== "Chand Kishor" && username !== "Anuradha") {
+      alert("Only Chand Kishor and Anuradha can chat here!");
+      return;
+    }
+
+    currentUser = username;
+    document.getElementById("login").style.display = "none";
+    document.getElementById("chat").style.display = "block";
+    document.getElementById("welcome").innerText = "Welcome, " + username;
+    
+    loadMessages();
+  }
+
+  function sendMessage() {
+    const msgInput = document.getElementById("messageInput");
+    const message = msgInput.value.trim();
+
+    if(message === "") return;
+
+    db.ref("messages").push({
+      user: currentUser,
+      text: message,
+      time: Date.now()
+    });
+
+    msgInput.value = "";
+  }
+
+  function loadMessages() {
+    const messagesDiv = document.getElementById("messages");
+    db.ref("messages").on("child_added", snapshot => {
+      const data = snapshot.val();
+      const div = document.createElement("div");
+      div.classList.add("msg");
+      div.classList.add(data.user === currentUser ? "self" : "other");
+      div.innerText = data.user + ": " + data.text;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  }
+</script>
+
+</body>
+</html>    if(username !== "Chand Kishor" && username !== "Anuradha") {
       alert("Only Chand Kishor and Anuradha can chat here!");
       return;
     }
