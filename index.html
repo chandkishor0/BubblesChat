@@ -1,58 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anuradha & Chand Kishor WhatsApp Clone</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Anuradha & Chand Kishor — WhatsApp Clone (calls + images)</title>
 <style>
-body {margin:0;font-family:'Comic Sans MS', cursive,sans-serif;background:linear-gradient(to bottom right,#ffcccc,#ffe6e6);}
-.chat-container {width:100%; max-width:500px;margin:0 auto;background:#fff0f5;height:100vh;display:flex;flex-direction:column;box-shadow:0 0 10px pink;border-radius:10px;overflow:hidden;position:relative;}
-.chat-header {background:#ff66b2;color:white;padding:15px;font-size:20px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;}
-.chat-header button {background:#ff99cc;color:white;border:none;padding:5px 10px;border-radius:20px;cursor:pointer;font-weight:bold;margin-left:5px;}
-.chat-header button:hover {background:#ff3399;}
-.chat-messages {flex:1;padding:10px;overflow-y:auto;background:#ffe6f0;display:flex;flex-direction:column;}
-.chat-input {display:flex;padding:10px;background:#ffccdd;}
-.chat-input input[type="text"] {flex:1;padding:10px;border-radius:25px;border:none;outline:none;font-size:16px;}
-.chat-input button {background:#ff66b2;color:white;border:none;padding:10px 15px;margin-left:10px;border-radius:25px;cursor:pointer;font-weight:bold;}
-.chat-input button:hover {background:#ff3399;}
-.message {margin:5px 0;padding:10px 15px;border-radius:20px;max-width:70%;animation:fadeIn 0.3s ease;position:relative;word-wrap:break-word;}
-.sent {background:#ff99cc;align-self:flex-end;}
-.received {background:#ffb3d9;align-self:flex-start;}
-.timestamp {font-size:10px;color:#990033;margin-top:2px;}
-.seen {font-size:12px;color:#cc0066;position:absolute;bottom:2px;right:5px;}
-@keyframes fadeIn {from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
-.typing {font-style:italic;color:#ff3399;padding:5px 10px;}
-#callContainer, #incomingCall {display:none;flex-direction:column;align-items:center;background:#ffe6f0;padding:10px;position:absolute;top:0;left:0;width:100%;height:100%;justify-content:center;z-index:10;border-radius:10px;}
-#callContainer video {border-radius:10px;margin:5px;}
-#incomingCall {text-align:center;font-size:18px;font-weight:bold;}
-#incomingCall button {margin:5px;padding:10px 20px;border-radius:20px;border:none;cursor:pointer;}
-#incomingCall button.accept {background:#ff66b2;color:white;}
-#incomingCall button.decline {background:#ff3399;color:white;}
-.emoji-picker {position:absolute;bottom:60px;left:10px;display:none;background:white;border:1px solid #ff99cc;border-radius:10px;padding:5px;flex-wrap:wrap;}
-.emoji-picker span {cursor:pointer;font-size:20px;margin:2px;}
-.voice-btn {background:#ff3399;color:white;border:none;padding:5px 10px;border-radius:50%;cursor:pointer;margin-left:5px;}
-.voice-btn:hover {background:#ff66b2;}
+  /* Basic romantic theme styles (kept compact) */
+  body{margin:0;font-family:Arial, Helvetica, sans-serif;background:linear-gradient(135deg,#ffe6f0,#fff0f5);height:100vh;display:flex;align-items:center;justify-content:center}
+  .app{width:100%;max-width:520px;background:#fffafc;border-radius:12px;box-shadow:0 6px 30px rgba(0,0,0,0.12);overflow:hidden;display:flex;flex-direction:column;height:92vh}
+  .header{background:#ff66b2;color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+  .header .title{font-weight:700}
+  .controls button{margin-left:8px;background:#ff99cc;border:none;padding:6px 10px;border-radius:8px;color:#fff;cursor:pointer}
+  .messages{flex:1;padding:14px;overflow:auto;background:linear-gradient(180deg,#fff0f7,#fff)}
+  .input-row{display:flex;padding:12px;background:#ffdced;align-items:center}
+  input[type="text"]{flex:1;padding:10px;border-radius:25px;border:none;outline:none;font-size:15px}
+  button#sendBtn{margin-left:10px;background:#ff3b95;color:#fff;border:none;padding:10px 14px;border-radius:22px;cursor:pointer}
+  .msg{max-width:72%;padding:10px 14px;border-radius:16px;margin:6px 0;display:inline-block;position:relative;word-break:break-word}
+  .sent{background:#ffb3d9;align-self:flex-end;margin-left:auto}
+  .recv{background:#ffe6f2;align-self:flex-start}
+  .timestamp{display:block;font-size:11px;color:#8e0033;margin-top:6px}
+  .typing{padding:6px 12px;color:#990033;font-style:italic}
+  .emoji-picker{position:fixed;bottom:90px;left:20px;background:#fff;border:1px solid #ffd7ea;padding:6px;border-radius:8px;display:none}
+  .emoji-picker span{cursor:pointer;padding:4px;font-size:18px}
+  .controls input[type=file]{display:none}
+  /* call UI */
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  #incomingCall, #callContainer{position:absolute;left:10%;right:10%;top:10%;bottom:10%;background:#fff0f7;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.18);padding:14px;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:50}
+  #callContainer video{border-radius:8px;margin:6px}
+  .small{font-size:13px;color:#800040;margin-top:8px}
+  .btn{padding:8px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+  .accept{background:#ff3b95;color:#fff;margin:6px}
+  .decline{background:#ff6699;color:#fff;margin:6px}
 </style>
 </head>
 <body>
 
-<div class="chat-container">
-  <div class="chat-header">
-    💖 Anuradha & Chand Kishor 💖
-    <div>
+<div class="app" id="app">
+  <div class="header">
+    <div class="title">💖 Anuradha & Chand Kishor</div>
+    <div class="controls">
       <button onclick="startCall('video')">📹 Video</button>
       <button onclick="startCall('audio')">📞 Audio</button>
       <button onclick="toggleEmoji()">😊</button>
-      <input type="file" id="imageInput" style="display:none" accept="image/*" onchange="sendImage(event)">
-      <button onclick="document.getElementById('imageInput').click()">📷</button>
-      <button class="voice-btn" id="recordBtn">🎤</button>
+      <label style="cursor:pointer">
+        <input id="imageInput" type="file" accept="image/*" onchange="handleImageSelect(event)" />
+        <button style="margin-left:6px">📷</button>
+      </label>
+      <button id="recordBtn" class="btn" style="background:#ff66b2;color:#fff">🎤</button>
     </div>
   </div>
 
-  <div class="chat-messages" id="messages"></div>
-  <div class="typing" id="typing"></div>
-  <div class="chat-input">
-    <input type="text" id="messageInput" placeholder="Type a message...">
+  <div class="messages" id="messages"></div>
+
+  <div class="typing" id="typing" style="display:none"></div>
+
+  <div class="input-row">
+    <input type="text" id="messageInput" placeholder="Type a message..." />
     <button id="sendBtn">Send</button>
   </div>
 
@@ -63,255 +66,419 @@ body {margin:0;font-family:'Comic Sans MS', cursive,sans-serif;background:linear
     <span onclick="addEmoji('😊')">😊</span>
     <span onclick="addEmoji('💌')">💌</span>
     <span onclick="addEmoji('💕')">💕</span>
-    <span onclick="addEmoji('💖')">💖</span>
-    <span onclick="addEmoji('💞')">💞</span>
-    <span onclick="addEmoji('💓')">💓</span>
-    <span onclick="addEmoji('💗')">💗</span>
   </div>
 </div>
 
-<div id="callContainer">
-  <video id="localVideo" autoplay muted width="150"></video>
-  <video id="remoteVideo" autoplay width="300"></video>
-  <div id="callType"></div>
-  <div id="callTimer">00:00</div>
-  <button onclick="endCall()">End Call</button>
+<!-- Incoming call popup -->
+<div id="incomingCall">
+  <div id="callerInfo" style="font-weight:700;color:#9b0040"></div>
+  <div class="small">Incoming call</div>
+  <div style="margin-top:10px">
+    <button class="btn accept" onclick="acceptCall()">Accept</button>
+    <button class="btn decline" onclick="declineCall()">Decline</button>
+  </div>
 </div>
 
-<div id="incomingCall">
-  <p id="callerInfo"></p>
-  <button class="accept" onclick="acceptCall()">Accept</button>
-  <button class="decline" onclick="declineCall()">Decline</button>
+<!-- Active call container -->
+<div id="callContainer">
+  <div style="display:flex;align-items:center;gap:12px">
+    <video id="localVideo" autoplay muted width="140"></video>
+    <video id="remoteVideo" autoplay width="320"></video>
+  </div>
+  <div id="callType" class="small"></div>
+  <div id="callTimer" class="small">00:00</div>
+  <div style="margin-top:10px">
+    <button class="btn decline" onclick="endCall()" style="background:#ff2566;color:#fff">End Call</button>
+  </div>
 </div>
 
 <audio id="ringtone" src="https://actions.google.com/sounds/v1/alarms/phone_alerts.mp3" loop></audio>
 
 <script type="module">
+/* ------------------ FIREBASE SETUP ------------------ */
+/* Use the firebase modules (v10.x) */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import { getDatabase, ref, push, set, onChildAdded, onValue } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
+import { getDatabase, ref, push, set, onChildAdded, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
 
+/* Your Firebase config — storageBucket fixed to appspot.com */
 const firebaseConfig = {
   apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
   authDomain: "bubblechat-8b913.firebaseapp.com",
   databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
   projectId: "bubblechat-8b913",
-  storageBucket: "bubblechat-8b913.appspot.com",
+  storageBucket: "bubblechat-8b913.appspot.com",       // <-- important: .appspot.com style
   messagingSenderId: "890679022385",
   appId: "1:890679022385:web:0391f6e09e0efdaa661610"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const storage = getStorage(app);
 
-let userName = prompt("Enter your name (Anuradha or Chand Kishor):");
-if(userName!=="Anuradha" && userName!=="Chand Kishor"){ alert("Only Anuradha or Chand Kishor allowed!"); throw new Error("Invalid User"); }
-
-const messagesRef = ref(db,'messages');
-const callRef = ref(db,'calls');
-
-const messagesDiv = document.getElementById('messages');
-const inputField = document.getElementById('messageInput');
+/* ------------------ GLOBAL UI REFERENCES ------------------ */
+const messagesEl = document.getElementById('messages');
+const msgInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const emojiPicker = document.getElementById('emojiPicker');
-const typingDiv = document.getElementById('typing');
+const typingEl = document.getElementById('typing');
 const recordBtn = document.getElementById('recordBtn');
-const callContainer = document.getElementById('callContainer');
-const incomingCallDiv = document.getElementById('incomingCall');
+const incomingEl = document.getElementById('incomingCall');
 const callerInfo = document.getElementById('callerInfo');
+const ringtone = document.getElementById('ringtone');
+const callContainer = document.getElementById('callContainer');
 const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
-const callTypeDiv = document.getElementById('callType');
-const callTimer = document.getElementById('callTimer');
-const ringtone = document.getElementById('ringtone');
+const callTypeEl = document.getElementById('callType');
+const callTimerEl = document.getElementById('callTimer');
 
-// ================= Chat =================
-sendBtn.addEventListener('click', ()=>{
-  const msg = inputField.value.trim();
-  if(!msg) return;
-  push(messagesRef,{sender:userName,message:msg,timestamp:Date.now(),seen:false,type:'text'});
-  inputField.value='';
-});
-inputField.addEventListener('keypress', e=>{if(e.key==='Enter') sendBtn.click();});
-onChildAdded(messagesRef,data=>{
-  const msg = data.val();
-  const div = document.createElement('div');
-  div.classList.add('message', msg.sender===userName?'sent':'received');
-  let content = msg.type==='text'? msg.message : (msg.type==='image'? `<img src="${msg.message}" style="max-width:200px;border-radius:10px;">` : `<audio controls src="${msg.message}"></audio>`);
-  div.innerHTML = content + `<div class="timestamp" title="${new Date(msg.timestamp).toLocaleString()}">${new Date(msg.timestamp).toLocaleTimeString()}</div><div class="seen">${msg.seen?'✔✔':'✔'}</div>`;
-  if(msg.sender===userName){
-    const editBtn=document.createElement('button'); editBtn.textContent='✏️'; editBtn.style.marginLeft='5px';
-    editBtn.onclick=()=>{ const newText=prompt("Edit message:",msg.message); if(newText) set(ref(db,'messages/'+data.key),{...msg,message:newText}); };
-    const delBtn=document.createElement('button'); delBtn.textContent='🗑️'; delBtn.style.marginLeft='5px';
-    delBtn.onclick=()=>{ set(ref(db,'messages/'+data.key),{...msg,message:'[Deleted]',type:'text'}); };
-    div.appendChild(editBtn); div.appendChild(delBtn);
-  }
-  messagesDiv.appendChild(div);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-});
-
-// ================= Typing =================
-inputField.addEventListener('input', ()=>{
-  set(ref(db,'typing/'+userName), inputField.value!=='' );
-});
-
-onValue(ref(db,'typing'), snapshot=>{
-  let typingUsers = [];
-  snapshot.forEach(snap=>{
-    if(snap.key!==userName && snap.val()) typingUsers.push(snap.key);
-  });
-  typingDiv.textContent = typingUsers.length>0 ? typingUsers.join(',')+' is typing... 💌' : '';
-});
-
-// ================= Emoji =================
-function toggleEmoji(){ emojiPicker.style.display = emojiPicker.style.display==='none'?'flex':'none'; }
-function addEmoji(e){ inputField.value+=e; emojiPicker.style.display='none'; }
-
-// ================= Image =================
-function sendImage(event){
-  const file = event.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    push(messagesRef,{sender:userName,message:e.target.result,timestamp:Date.now(),seen:false,type:'image'});
-  };
-  reader.readAsDataURL(file);
+/* ------------------ LOGIN (two allowed users) ------------------ */
+let userName = prompt("Enter your name (Anuradha or Chand Kishor):");
+if(userName !== "Anuradha" && userName !== "Chand Kishor"){
+  alert("Only Anuradha or Chand Kishor allowed!");
+  throw new Error("Invalid User");
 }
 
-// ================= Voice Notes =================
-let mediaRecorder, audioChunks=[];
-recordBtn.onclick = async ()=>{
-  if(recordBtn.dataset.recording!=='true'){
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.start(); recordBtn.dataset.recording='true'; recordBtn.textContent='⏹';
-    audioChunks=[];
-    mediaRecorder.ondataavailable = e=>audioChunks.push(e.data);
-    mediaRecorder.onstop = ()=>{
-      const blob = new Blob(audioChunks,{type:'audio/webm'});
-      const reader = new FileReader();
-      reader.onload = function(e){
-        push(messagesRef,{sender:userName,message:e.target.result,timestamp:Date.now(),seen:false,type:'audio'});
-      };
-      reader.readAsDataURL(blob);
+/* The other peer name (we only have two users) */
+const otherUser = (userName === "Anuradha") ? "Chand Kishor" : "Anuradha";
+
+/* ------------------ Database refs ------------------ */
+const messagesRef = ref(db, 'messages');
+const typingRefPrefix = ref(db, 'typing'); // will use child nodes typing/<username>
+const callsRootRef = ref(db, 'calls');     // calls/<callId>
+
+/* Helper: append message to UI */
+function appendMessage(msgObj, key) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + (msgObj.sender === userName ? 'sent' : 'recv');
+  const content = (msgObj.type === 'text') ? escapeHtml(msgObj.message)
+                : (msgObj.type === 'image') ? `<img src="${msgObj.message}" style="max-width:210px;border-radius:10px">`
+                : (msgObj.type === 'audio') ? `<audio controls src="${msgObj.message}"></audio>`
+                : escapeHtml(msgObj.message);
+  el.innerHTML = content + `<div class="timestamp" title="${new Date(msgObj.timestamp).toLocaleString()}">${new Date(msgObj.timestamp).toLocaleTimeString()}</div>`;
+  // Edit/Delete buttons for own messages
+  if (msgObj.sender === userName) {
+    const editBtn = document.createElement('button'); editBtn.textContent = '✏️'; editBtn.style.marginLeft = '6px';
+    editBtn.onclick = () => {
+      const newText = prompt('Edit message', msgObj.message);
+      if (newText !== null) {
+        set(ref(db, 'messages/' + key), {...msgObj, message: newText, timestamp: Date.now()});
+      }
     };
-  }else{
-    mediaRecorder.stop(); recordBtn.dataset.recording='false'; recordBtn.textContent='🎤';
+    const delBtn = document.createElement('button'); delBtn.textContent = '🗑️'; delBtn.style.marginLeft = '6px';
+    delBtn.onclick = () => {
+      set(ref(db, 'messages/' + key), {...msgObj, message: '[deleted]', type: 'text', timestamp: Date.now()});
+    };
+    el.appendChild(editBtn); el.appendChild(delBtn);
   }
-};
+  messagesEl.appendChild(el);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
 
-// ================= Notifications =================
-if(Notification.permission!=='granted'){ Notification.requestPermission(); }
-onChildAdded(messagesRef,(data)=>{
-  const msg = data.val();
-  if(msg.sender!==userName && Notification.permission==='granted'){
-    new Notification(`${msg.sender} says:`,{body:msg.type==='text'?msg.message:'[Media]'});
+/* escape HTML to avoid injection for text messages */
+function escapeHtml(text){
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(text));
+  return div.innerHTML;
+}
+
+/* ================= CHAT: send & receive ================= */
+sendBtn.addEventListener('click', ()=> {
+  const text = msgInput.value.trim();
+  if(!text) return;
+  push(messagesRef, { sender: userName, message: text, timestamp: Date.now(), type: 'text', seen: false });
+  msgInput.value = '';
+});
+
+msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter'){ sendBtn.click(); } });
+
+onChildAdded(messagesRef, (snap) => {
+  const msg = snap.val();
+  appendMessage(msg, snap.key);
+  // mark seen if message is for us (simple heuristic)
+  if (msg.sender !== userName && !msg.seen) {
+    set(ref(db, 'messages/' + snap.key + '/seen'), true);
   }
 });
 
-// ================= Call Logic (WebRTC + Firebase) =================
-let localStream, pc, callRefInstance, callId, callTimerInterval;
+/* ---------------- Typing ---------------- */
+msgInput.addEventListener('input', () => {
+  set(ref(db, 'typing/' + userName), msgInput.value !== '');
+});
+onValue(ref(db, 'typing'), (snapshot) => {
+  let typingUsers = [];
+  snapshot.forEach(s => { if(s.key !== userName && s.val()) typingUsers.push(s.key); });
+  typingEl.style.display = typingUsers.length ? 'block' : 'none';
+  typingEl.textContent = typingUsers.length ? typingUsers.join(', ') + ' is typing... 💌' : '';
+});
+
+/* ---------------- Emoji ---------------- */
+function toggleEmoji(){ emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'flex' : 'none'; }
+function addEmoji(e){ msgInput.value += e; emojiPicker.style.display = 'none'; }
+
+/* ---------------- Image Upload (Storage) ---------------- */
+async function handleImageSelect(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const path = `images/${Date.now()}_${file.name}`;
+  const sRefPath = sRef(storage, path);
+  try {
+    const data = await file.arrayBuffer();
+    const u = await uploadBytes(sRefPath, new Uint8Array(data));
+    const url = await getDownloadURL(sRefPath);
+    push(messagesRef, { sender: userName, message: url, timestamp: Date.now(), type: 'image', seen: false });
+  } catch (err) {
+    console.error('Upload failed', err); alert('Image upload failed: ' + err.message);
+  }
+}
+
+/* ---------------- Voice notes (record & upload as base64 URL) ---------------- */
+let mediaRecorder = null, audioChunks = [];
+recordBtn.addEventListener('click', async () => {
+  if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        // upload voice note to storage
+        const name = `audios/${Date.now()}.webm`;
+        const sref = sRef(storage, name);
+        try {
+          await uploadBytes(sref, blob);
+          const url = await getDownloadURL(sref);
+          push(messagesRef, { sender: userName, message: url, timestamp: Date.now(), type: 'audio', seen: false });
+        } catch (err) { console.error(err); alert('Voice upload failed'); }
+      };
+      mediaRecorder.start();
+      recordBtn.textContent = '⏹';
+    } catch (err) { alert('Microphone access denied or error: ' + err.message); }
+  } else {
+    mediaRecorder.stop();
+    recordBtn.textContent = '🎤';
+  }
+});
+
+/* ---------------- Notifications ---------------- */
+if(Notification && Notification.permission !== 'granted') Notification.requestPermission();
+onChildAdded(messagesRef, (snap) => {
+  const m = snap.val();
+  if (m.sender !== userName && Notification.permission === 'granted') {
+    new Notification(`${m.sender}`, { body: (m.type === 'text' ? m.message : '[media]') });
+  }
+});
+
+/* ===================== CALLING: WebRTC + Firebase Signaling ===================== */
+/*
+  Flow:
+   - Caller: startCall(type) -> create RTCPeerConnection -> createOffer -> set localDesc -> write calls/<callId> {from,to,type,offer, status:'ringing'}
+   - Receiver: on calls node sees a call where to == userName & status == 'ringing' -> show incoming popup
+   - Receiver: acceptCall() -> create RTCPeerConnection -> setRemoteDescription(offer) -> createAnswer -> setLocalDescription -> write calls/<callId>/answer = answer, set status='accepted'
+   - Both sides: exchange ICE candidates at calls/<callId>/candidates (push)
+   - End: endCall() sets calls/<callId>/status='ended' (or remove)
+*/
 const servers = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+let pc = null;
+let localStream = null;
+let currentCallId = null;
+let callTimer = null;
 
-// Start Call (Audio/Video)
-async function startCall(type){
-  callId = 'call_shared';
-  callRefInstance = ref(db,'calls/'+callId);
-  localStream = await navigator.mediaDevices.getUserMedia({video:type==='video', audio:true});
-  localVideo.srcObject = localStream;
-  pc = new RTCPeerConnection(servers);
-  localStream.getTracks().forEach(track=>pc.addTrack(track, localStream));
-  pc.ontrack = e=>{ remoteVideo.srcObject = e.streams[0]; };
-  pc.onicecandidate = e=>{
-    if(e.candidate) push(ref(db,'calls/'+callId+'/candidates'), e.candidate.toJSON());
-  };
+/* startCall called from UI (audio/video) */
+async function startCall(type) {
+  try {
+    // create unique call id (timestamp + user)
+    currentCallId = `${userName.replace(/\s+/g,'')}_${Date.now()}`;
+    const callRef = ref(db, 'calls/' + currentCallId);
 
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  await set(callRefInstance,{from:userName,type:type,offer:offer});
+    // get media
+    localStream = await navigator.mediaDevices.getUserMedia({ video: type === 'video', audio: true });
+    localVideo.srcObject = localStream;
 
-  onValue(callRefInstance, async snapshot=>{
-    const data = snapshot.val();
-    if(!data) return;
-    if(data.answer && !pc.currentRemoteDescription){
-      await pc.setRemoteDescription(data.answer);
-      startCallTimer();
-    }
-  });
+    // create pc
+    pc = new RTCPeerConnection(servers);
+    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
-  onChildAdded(ref(db,'calls/'+callId+'/candidates'), snapshot=>{
-    const candidate = new RTCIceCandidate(snapshot.val());
-    pc.addIceCandidate(candidate);
-  });
+    // remote track
+    pc.ontrack = e => { remoteVideo.srcObject = e.streams[0]; };
 
-  callContainer.style.display='flex';
-  callTypeDiv.textContent = type==='video'?'Video Call':'Audio Call';
+    // ICE -> push to DB
+    pc.onicecandidate = event => {
+      if (event.candidate) {
+        push(ref(db, `calls/${currentCallId}/candidates`), event.candidate.toJSON());
+      }
+    };
+
+    // create offer
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    // write call data
+    await set(callRef, { from: userName, to: otherUser, type: type, offer: offer, status: 'ringing', timestamp: Date.now() });
+
+    // listen for answer
+    onValue(callRef, async (snap) => {
+      const data = snap.val();
+      if (!data) return;
+      if (data.answer && pc && !pc.currentRemoteDescription) {
+        await pc.setRemoteDescription(data.answer);
+        // start call timer when accepted
+        if (data.status === 'accepted') startCallUI(type);
+      }
+    });
+
+    // listen for candidates
+    onChildAdded(ref(db, `calls/${currentCallId}/candidates`), (snap) => {
+      const c = snap.val();
+      if (c && pc) pc.addIceCandidate(new RTCIceCandidate(c)).catch(e => console.warn('addIce failed', e));
+    });
+
+    // also listen for remote end
+    onValue(callRef, (snap) => {
+      const d = snap.val();
+      if (d && d.status === 'ended') {
+        endCallLocal();
+      }
+    });
+
+    // show call UI for caller immediately
+    startCallUI(type);
+  } catch (err) {
+    console.error('startCall error', err); alert('Call error: ' + err.message);
+  }
 }
 
-// Accept Incoming Call
-async function acceptCall(){
-  incomingCallDiv.style.display='none';
-  ringtone.pause();
-  localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  localVideo.srcObject = localStream;
-  pc = new RTCPeerConnection(servers);
-  localStream.getTracks().forEach(track=>pc.addTrack(track, localStream));
-  pc.ontrack = e=>{ remoteVideo.srcObject = e.streams[0]; };
-  pc.onicecandidate = e=>{ if(e.candidate) push(ref(db,'calls/'+callId+'/candidates'), e.candidate.toJSON()); };
-
-  const snap = await ref(db,'calls/'+callId).get();
-  const offer = snap.val().offer;
-  await pc.setRemoteDescription(offer);
-  const answer = await pc.createAnswer();
-  await pc.setLocalDescription(answer);
-  await set(ref(db,'calls/'+callId+'/answer'), answer);
-
-  onChildAdded(ref(db,'calls/'+callId+'/candidates'), snapshot=>{
-    const candidate = new RTCIceCandidate(snapshot.val());
-    pc.addIceCandidate(candidate);
-  });
-
-  callContainer.style.display='flex';
-  startCallTimer();
+/* Show local call UI and start timer */
+function startCallUI(type) {
+  callTypeEl.textContent = type === 'video' ? 'Video Call' : 'Audio Call';
+  callContainer.style.display = 'flex';
+  // timer
+  let seconds = 0;
+  callTimerEl.textContent = '00:00';
+  clearInterval(callTimer);
+  callTimer = setInterval(() => {
+    seconds++;
+    const m = String(Math.floor(seconds/60)).padStart(2, '0');
+    const s = String(seconds % 60).padStart(2, '0');
+    callTimerEl.textContent = `${m}:${s}`;
+  }, 1000);
 }
 
-// Decline Call
-function declineCall(){
-  incomingCallDiv.style.display='none';
-  ringtone.pause();
-  set(ref(db,'calls/'+callId), null);
-}
-
-// End Call
-function endCall(){
-  if(pc){ pc.close(); pc=null; }
-  if(localStream){ localStream.getTracks().forEach(t=>t.stop()); }
-  callContainer.style.display='none';
-  clearInterval(callTimerInterval); callTimer.textContent='00:00';
-  set(ref(db,'calls/'+callId), null);
-}
-
-// Incoming call listener
-onValue(ref(db,'calls'), snapshot=>{
+/* Listen for incoming calls (someone creates calls/<id> with to == userName and status == 'ringing') */
+onValue(ref(db, 'calls'), (snapshot) => {
   const calls = snapshot.val();
-  if(!calls) return;
-  for(let id in calls){
+  if (!calls) return;
+  for (const id in calls) {
     const c = calls[id];
-    if(c.from !== userName){
-      callId = id; callRefInstance = ref(db,'calls/'+callId);
-      incomingCallDiv.style.display='flex';
-      callerInfo.textContent = `${c.from} is calling (${c.type})...`;
+    if (c && c.to === userName && c.status === 'ringing') {
+      // incoming call
+      currentCallId = id;
+      callerInfo.textContent = `${c.from} is calling (${c.type})`;
+      incomingEl.style.display = 'flex';
       ringtone.play();
+      break;
     }
   }
 });
 
-// Call Timer
-function startCallTimer(){
-  let seconds=0; callTimerInterval=setInterval(()=>{
-    seconds++;
-    let m=Math.floor(seconds/60).toString().padStart(2,'0');
-    let s=(seconds%60).toString().padStart(2,'0');
-    callTimer.textContent = `${m}:${s}`;
-  },1000);
+/* Accept incoming call */
+async function acceptCall() {
+  try {
+    ringtone.pause();
+    incomingEl.style.display = 'none';
+    const callRef = ref(db, 'calls/' + currentCallId);
+    const snap = await get(callRef);
+    const callData = snap.val();
+    if (!callData || !callData.offer) { alert('Call data not found'); return; }
+
+    // get media
+    localStream = await navigator.mediaDevices.getUserMedia({ video: callData.type === 'video', audio: true });
+    localVideo.srcObject = localStream;
+
+    // create pc and add tracks
+    pc = new RTCPeerConnection(servers);
+    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+    pc.ontrack = e => { remoteVideo.srcObject = e.streams[0]; };
+
+    // ICE
+    pc.onicecandidate = e => {
+      if (e.candidate) {
+        push(ref(db, `calls/${currentCallId}/candidates`), e.candidate.toJSON());
+      }
+    };
+
+    // set remote offer
+    await pc.setRemoteDescription(callData.offer);
+
+    // create answer
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    // write answer + change status
+    await set(ref(db, `calls/${currentCallId}/answer`), answer);
+    await set(ref(db, `calls/${currentCallId}/status`), 'accepted');
+
+    // listen for ICE candidates (incoming)
+    onChildAdded(ref(db, `calls/${currentCallId}/candidates`), (snap) => {
+      const c = snap.val();
+      if (c && pc) pc.addIceCandidate(new RTCIceCandidate(c)).catch(e => console.warn('addIce failed', e));
+    });
+
+    // listen for end
+    onValue(ref(db, `calls/${currentCallId}`), (snap) => {
+      const d = snap.val();
+      if (d && d.status === 'ended') endCallLocal();
+    });
+
+    startCallUI(callData.type);
+  } catch (err) {
+    console.error('acceptCall error', err); alert('Accept call failed: ' + err.message);
+  }
 }
+
+/* Decline incoming call */
+function declineCall() {
+  ringtone.pause();
+  incomingEl.style.display = 'none';
+  if (currentCallId) set(ref(db, 'calls/' + currentCallId + '/status'), 'ended');
+  currentCallId = null;
+}
+
+/* End call from either side */
+function endCall() {
+  if (!currentCallId) return;
+  set(ref(db, 'calls/' + currentCallId + '/status'), 'ended');
+  endCallLocal();
+}
+
+/* cleanup local after call ends */
+function endCallLocal() {
+  try {
+    if (pc) { pc.close(); pc = null; }
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  } catch (e) { console.warn(e); }
+  callContainer.style.display = 'none';
+  incomingEl.style.display = 'none';
+  clearInterval(callTimer); callTimer = null;
+  callTimerEl.textContent = '00:00';
+  // remove call entry from DB to cleanup (optional)
+  if (currentCallId) {
+    try { remove(ref(db, 'calls/' + currentCallId)); } catch(e) {}
+    currentCallId = null;
+  }
+}
+
+/* ------------------- Utility: get snapshot (used earlier) ------------------- */
+import { get as dbGet } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
+const { get: db_get } = { get: dbGet };
+
+/* small wrapper to use the imported get (since earlier imports) */
+async function get(refNode) { return await db_get(refNode); }
+
+/* ------------------ EXPORTS for HTML inline calls (startCall etc.) ------------------ */
+/* (They are in global scope already) */
+
 </script>
 </body>
 </html>
