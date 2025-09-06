@@ -1,49 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bubble Chat</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f0f2f5; }
-    .login-overlay { position:fixed; top:0; left:0; right:0; bottom:0;
-      background:#fff; display:flex; justify-content:center; align-items:center; flex-direction:column; z-index:10; }
-    .login-box { padding:20px; border-radius:12px; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.2); }
-    .login-box input { width:250px; padding:10px; margin:5px 0; border-radius:8px; border:1px solid #ccc; }
-    .login-box button { width:100%; padding:10px; background:#2196F3; border:none; color:#fff; border-radius:8px; cursor:pointer; font-size:16px; }
-    .chat-container { display:none; height:100vh; position:relative; }
-    #messages { height:calc(100vh - 140px); overflow-y:auto; padding:10px; }
-    .msg { padding:8px 12px; border-radius:12px; margin:5px; max-width:70%; position:relative; }
-    .sent { background:#DCF8C6; align-self:flex-end; }
-    .received { background:#fff; border:1px solid #ddd; }
-    .msg small { font-size:10px; color:gray; position:absolute; bottom:2px; right:8px; }
-    .input-row { display:flex; gap:5px; align-items:center; padding:8px; background:#fff; position:sticky; bottom:0; }
-    #messageInput { flex:1; padding:10px; border:1px solid #ccc; border-radius:10px; }
-    button { border:none; padding:10px 14px; border-radius:10px; cursor:pointer; }
-    .upload-btn { background:#4CAF50; color:white; }
-    .send-btn { background:tomato; color:white; }
-    .clear-btn { background:#e91e63; color:white; margin:8px; border-radius:8px; padding:6px 10px; }
-    .typing { font-size:12px; color:gray; margin-left:10px; }
-    .call-buttons { position:absolute; top:10px; right:15px; display:flex; gap:8px; }
-    .call-btn { background:#2196F3; border-radius:50%; padding:10px; cursor:pointer; color:white; font-size:18px; }
-    .video-btn { background:#9C27B0; }
-    .incoming-call { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; flex-direction:column; color:white; z-index:20; }
-    .incoming-call button { margin:10px; padding:12px 20px; border-radius:8px; }
-    .accept { background:green; color:white; }
-    .reject { background:red; color:white; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bubble Chat</title>
+<style>
+  body { margin:0; font-family:Arial,sans-serif; overflow:hidden; height:100vh; display:flex; justify-content:center; align-items:center; background:linear-gradient(135deg,#6a11cb,#2575fc); }
+  /* Bubble Animation */
+  .bubble { position:absolute; bottom:-100px; background:rgba(255,255,255,0.2); border-radius:50%; animation:rise 20s infinite ease-in; }
+  @keyframes rise { from{transform:translateY(0) scale(1);} to{transform:translateY(-110vh) scale(1.5);} }
+
+  /* Login Overlay */
+  .login-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.9); display:flex; justify-content:center; align-items:center; z-index:10; }
+  .login-box { padding:20px; border-radius:12px; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.2); display:flex; flex-direction:column; align-items:center; }
+  .login-box input { width:220px; padding:10px; margin:5px 0; border-radius:8px; border:1px solid #ccc; }
+  .login-box button { width:100%; padding:10px; background:#2196F3; border:none; color:#fff; border-radius:8px; cursor:pointer; font-size:16px; }
+
+  /* Chat Container */
+  .chat-container { display:none; position:relative; width:100%; max-width:420px; height:90vh; backdrop-filter:blur(10px); background:rgba(0,0,0,0.4); border-radius:20px; display:flex; flex-direction:column; color:white; box-shadow:0px 0px 20px rgba(0,0,0,0.5); }
+  #messages { flex:1; overflow-y:auto; padding:10px; }
+  .msg { padding:8px 12px; border-radius:12px; margin:5px; max-width:70%; word-wrap:break-word; position:relative; }
+  .sent { background:#DCF8C6; align-self:flex-end; color:black; }
+  .received { background:#fff; color:black; border:1px solid #ddd; align-self:flex-start; }
+  .msg small { font-size:10px; color:gray; position:absolute; bottom:2px; right:8px; }
+  .input-row { display:flex; gap:5px; align-items:center; padding:8px; background:rgba(255,255,255,0.2); border-radius:12px; position:sticky; bottom:0; }
+  #messageInput { flex:1; padding:10px; border-radius:10px; border:none; }
+  .send-btn { background:tomato; color:white; border-radius:10px; padding:10px 12px; cursor:pointer; }
+  .upload-btn { background:#4CAF50; color:white; border-radius:10px; padding:10px 12px; cursor:pointer; }
+  .clear-btn { background:#e91e63; color:white; border-radius:10px; padding:6px 10px; margin:5px; }
+  .typing { font-size:12px; color:#ddd; margin-left:10px; height:15px; }
+  .call-buttons { position:absolute; top:10px; right:15px; display:flex; gap:8px; }
+  .call-btn { background:#2196F3; border-radius:50%; padding:10px; cursor:pointer; color:white; font-size:18px; }
+  .video-btn { background:#9C27B0; }
+
+  /* Incoming Call */
+  .incoming-call { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; flex-direction:column; color:white; z-index:20; }
+  .incoming-call button { margin:10px; padding:12px 20px; border-radius:8px; }
+  .accept { background:green; color:white; }
+  .reject { background:red; color:white; }
+
+  /* Images in chat */
+  .msg img { max-width:200px; border-radius:8px; margin-top:5px; }
+</style>
 </head>
 <body>
 
+<!-- Bubble background -->
+<div class="bubble" style="width:40px; height:40px; left:10%; animation-duration:18s;"></div>
+<div class="bubble" style="width:25px; height:25px; left:30%; animation-duration:25s;"></div>
+<div class="bubble" style="width:60px; height:60px; left:70%; animation-duration:22s;"></div>
+<div class="bubble" style="width:15px; height:15px; left:50%; animation-duration:30s;"></div>
+
+<!-- Login -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-box">
     <h2>Login to Bubble Chat</h2>
-    <input type="text" id="username" placeholder="Enter username (Anuradha / Chand Kishor)">
+    <input type="text" id="username" placeholder="Hint: Anuradha / Chand Kishor">
     <input type="password" id="password" placeholder="Enter password">
     <button onclick="login()">Enter Chat</button>
   </div>
 </div>
 
+<!-- Chat -->
 <div class="chat-container" id="chatContainer">
   <h2 id="welcome"></h2>
 
@@ -65,6 +83,7 @@
   <button class="clear-btn" onclick="clearChat()">🗑 Clear Chat</button>
 </div>
 
+<!-- Incoming call -->
 <div class="incoming-call" id="incomingCall">
   <h2>Incoming Call...</h2>
   <button class="accept" onclick="acceptCall()">Accept</button>
@@ -75,14 +94,14 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getDatabase, ref, push, onChildAdded, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+  import { getDatabase, ref, push, onChildAdded, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
     authDomain: "bubblechat-8b913.firebaseapp.com",
-    databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
+    databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com/",
     projectId: "bubblechat-8b913",
-    storageBucket: "bubblechat-8b913.firebasestorage.app",
+    storageBucket: "bubblechat-8b913.appspot.com",
     messagingSenderId: "890679022385",
     appId: "1:890679022385:web:0391f6e09e0efdaa661610"
   };
@@ -95,121 +114,106 @@
   function login() {
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value.trim();
-
-    if ((username === "Anuradha" && password === "Anuradha8877") ||
-        (username === "Chand Kishor" && password === "Chand6202")) {
-      currentUser = username === "Anuradha" ? "Anuradha8877" : "Chand6202";
-      document.getElementById("loginOverlay").style.display = "none";
-      document.getElementById("chatContainer").style.display = "block";
+    if ((username==="Anuradha" && password==="Anuradha8877") ||
+        (username==="Chand Kishor" && password==="Chand6202")) {
+      currentUser = username==="Anuradha"? "Anuradha8877":"Chand6202";
+      document.getElementById("loginOverlay").style.display="none";
+      document.getElementById("chatContainer").style.display="flex";
       document.getElementById("welcome").innerText = "Welcome " + username;
       loadMessages();
-    } else {
-      alert("Invalid login details!");
-    }
+    } else alert("Invalid login!");
   }
   window.login = login;
 
   function loadMessages() {
-    const messagesRef = ref(db, "messages");
-    onChildAdded(messagesRef, (data) => {
-      displayMessage(data.key, data.val());
-    });
+    const messagesRef = ref(db,"messages");
+    onChildAdded(messagesRef, (data)=> displayMessage(data.key, data.val()));
   }
 
-  function displayMessage(id, msg) {
-    const msgDiv = document.createElement("div");
-    msgDiv.classList.add("msg");
-    msgDiv.classList.add(msg.user === currentUser ? "sent" : "received");
-
-    if (msg.text) msgDiv.innerHTML = msg.text;
-    if (msg.image) msgDiv.innerHTML = `<img src="${msg.image}" style="max-width:200px;border-radius:8px;">`;
-
-    let status = msg.status || "sent";
-    let tick = status === "sent" ? "✅" : status === "delivered" ? "✅✅" : "🔵";
-    msgDiv.innerHTML += `<br><small>${tick}</small>`;
-
-    msgDiv.onclick = () => {
-      if (currentUser === "Chand6202" || (currentUser === msg.user)) {
-        remove(ref(db, "messages/" + id));
-        msgDiv.remove();
+  function displayMessage(id,msg){
+    const div = document.createElement("div");
+    div.classList.add("msg");
+    div.classList.add(msg.user===currentUser?"sent":"received");
+    if(msg.text) div.innerHTML = msg.text;
+    if(msg.image) div.innerHTML = `<img src="${msg.image}">`;
+    let tick = msg.status==="sent"?"✅":msg.status==="delivered"?"✅✅":"🔵";
+    div.innerHTML += `<br><small>${tick}</small>`;
+    div.onclick = ()=>{
+      if(currentUser==="Chand6202" || currentUser===msg.user){
+        remove(ref(db,"messages/"+id)); div.remove();
       }
-    };
+    }
+    document.getElementById("messages").appendChild(div);
+    document.getElementById("messages").scrollTop=document.getElementById("messages").scrollHeight;
 
-    document.getElementById("messages").appendChild(msgDiv);
-    document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
-
-    if (msg.user !== currentUser) {
-      update(ref(db, "messages/" + id), { status: "delivered" });
-      setTimeout(() => {
-        update(ref(db, "messages/" + id), { status: "read" });
-      }, 2000);
+    if(msg.user!==currentUser){
+      update(ref(db,"messages/"+id),{status:"delivered"});
+      setTimeout(()=> update(ref(db,"messages/"+id),{status:"read"}),2000);
     }
   }
 
-  function sendMessage() {
-    const text = document.getElementById("messageInput").value;
-    if (text.trim() === "") return;
-    push(ref(db, "messages"), { text, user: currentUser, status: "sent" });
-    document.getElementById("messageInput").value = "";
+  function sendMessage(){
+    const txt = document.getElementById("messageInput").value;
+    if(!txt.trim()) return;
+    push(ref(db,"messages"),{text:txt,user:currentUser,status:"sent"});
+    document.getElementById("messageInput").value="";
   }
   window.sendMessage = sendMessage;
 
-  function sendImage(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+  function sendImage(event){
+    const file=event.target.files[0];
+    if(!file) return;
     const reader = new FileReader();
-    reader.onload = function(e) {
-      push(ref(db, "messages"), { image: e.target.result, user: currentUser, status: "sent" });
-    };
+    reader.onload = function(e){
+      push(ref(db,"messages"),{image:e.target.result,user:currentUser,status:"sent"});
+    }
     reader.readAsDataURL(file);
   }
   window.sendImage = sendImage;
 
-  function clearChat() {
-    if (currentUser === "Chand6202") {
-      set(ref(db, "messages"), {});
-      document.getElementById("messages").innerHTML = "";
-    } else {
-      alert("Only admin (Chand) can clear full chat!");
-    }
+  function clearChat(){
+    if(currentUser==="Chand6202"){
+      set(ref(db,"messages"),{});
+      document.getElementById("messages").innerHTML="";
+    } else alert("Only admin can clear chat!");
   }
   window.clearChat = clearChat;
 
-  function showTyping() {
-    set(ref(db, "typing"), currentUser + " is typing...");
-    setTimeout(() => set(ref(db, "typing"), ""), 1500);
+  function showTyping(){
+    set(ref(db,"typing"),currentUser+" is typing...");
+    setTimeout(()=>set(ref(db,"typing"),""),1500);
   }
   window.showTyping = showTyping;
 
-  onValue(ref(db, "typing"), (snapshot) => {
-    document.getElementById("typing").innerText = snapshot.val() || "";
+  onValue(ref(db,"typing"),(snap)=>{
+    document.getElementById("typing").innerText=snap.val()||"";
   });
 
-  function startAudioCall() {
-    document.getElementById("incomingCall").style.display = "flex";
+  function startAudioCall(){
+    document.getElementById("incomingCall").style.display="flex";
     document.getElementById("ringtone").play();
   }
   window.startAudioCall = startAudioCall;
 
-  function startVideoCall() {
-    document.getElementById("incomingCall").style.display = "flex";
+  function startVideoCall(){
+    document.getElementById("incomingCall").style.display="flex";
     document.getElementById("ringtone").play();
   }
   window.startVideoCall = startVideoCall;
 
-  function acceptCall() {
-    document.getElementById("incomingCall").style.display = "none";
+  function acceptCall(){
+    document.getElementById("incomingCall").style.display="none";
     document.getElementById("ringtone").pause();
     alert("Call Started!");
   }
   window.acceptCall = acceptCall;
 
-  function rejectCall() {
-    document.getElementById("incomingCall").style.display = "none";
+  function rejectCall(){
+    document.getElementById("incomingCall").style.display="none";
     document.getElementById("ringtone").pause();
   }
   window.rejectCall = rejectCall;
-</script>
 
+</script>
 </body>
 </html>
