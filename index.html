@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anuradha & Chand Kishor 💖</title>
+<style>
+body {margin:0;font-family:'Comic Sans MS',cursive;background:linear-gradient(to bottom right,#ffcccc,#ffe6e6);}
+#loginBox {text-align:center;padding:40px;}
+#loginBox input {padding:10px;margin:5px;width:220px;border-radius:10px;border:1px solid pink;}
+#loginBox button {padding:10px 20px;background:#ff66b2;color:white;border:none;border-radius:20px;cursor:pointer;}
+#loginBox button:hover {background:#ff3399;}
+#chatApp {display:none;}
+.chat-container {width:100%; max-width:500px;margin:0 auto;background:#fff0f5;height:100vh;display:flex;flex-direction:column;box-shadow:0 0 10px pink;border-radius:10px;overflow:hidden;position:relative;}
+.chat-header {background:#ff66b2;color:white;padding:15px;font-size:20px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;}
+.chat-header button {background:#ff99cc;color:white;border:none;padding:5px 10px;border-radius:20px;cursor:pointer;font-weight:bold;margin-left:5px;}
+.chat-header button:hover {background:#ff3399;}
+.chat-messages {flex:1;padding:10px;overflow-y:auto;background:#ffe6f0;display:flex;flex-direction:column;}
+.chat-input {display:flex;padding:10px;background:#ffccdd;}
+.chat-input input[type="text"] {flex:1;padding:10px;border-radius:25px;border:none;outline:none;font-size:16px;}
+.chat-input button {background:#ff66b2;color:white;border:none;padding:10px 15px;margin-left:10px;border-radius:25px;cursor:pointer;font-weight:bold;}
+.chat-input button:hover {background:#ff3399;}
+.message {margin:5px 0;padding:10px 15px;border-radius:20px;max-width:70%;animation:fadeIn 0.3s ease;position:relative;word-wrap:break-word;}
+.sent {background:#ff99cc;align-self:flex-end;}
+.received {background:#ffb3d9;align-self:flex-start;}
+.timestamp {font-size:10px;color:#990033;margin-top:2px;}
+.seen {font-size:12px;color:#cc0066;position:absolute;bottom:2px;right:5px;}
+@keyframes fadeIn {from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+.typing {font-style:italic;color:#ff3399;padding:5px 10px;}
+#callContainer, #incomingCall {display:none;flex-direction:column;align-items:center;background:#ffe6f0;padding:10px;position:absolute;top:0;left:0;width:100%;height:100%;justify-content:center;z-index:10;border-radius:10px;}
+#callContainer video {border-radius:10px;margin:5px;}
+#incomingCall {text-align:center;font-size:18px;font-weight:bold;}
+#incomingCall button {margin:5px;padding:10px 20px;border-radius:20px;border:none;cursor:pointer;}
+#incomingCall button.accept {background:#ff66b2;color:white;}
+#incomingCall button.decline {background:#ff3399;color:white;}
+.emoji-picker {position:absolute;bottom:60px;left:10px;display:none;background:white;border:1px solid #ff99cc;border-radius:10px;padding:5px;flex-wrap:wrap;}
+.emoji-picker span {cursor:pointer;font-size:20px;margin:2px;}
+.voice-btn {background:#ff3399;color:white;border:none;padding:5px 10px;border-radius:50%;cursor:pointer;margin-left:5px;}
+.voice-btn:hover {background:#ff66b2;}
+</style>
+</head>
+<body>
+
+<!-- Login Box -->
+<div id="loginBox">
+  <h2>💖 Anuradha & Chand Kishor 💖</h2>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Password"><br>
+  <button onclick="login()">Login</button>
+  <p id="loginError" style="color:red;"></p>
+</div>
+
+<!-- Chat App -->
+<div id="chatApp">
+  <div class="chat-container">
+    <div class="chat-header">
+      💕 Private Chat 💕
+      <div>
+        <button onclick="startCall('video')">📹</button>
+        <button onclick="startCall('audio')">📞</button>
+        <button onclick="toggleEmoji()">😊</button>
+        <input type="file" id="imageInput" style="display:none" accept="image/*" onchange="sendImage(event)">
+        <button onclick="document.getElementById('imageInput').click()">📷</button>
+        <button class="voice-btn" id="recordBtn">🎤</button>
+      </div>
+    </div>
+    <div class="chat-messages" id="messages"></div>
+    <div class="typing" id="typing"></div>
+    <div class="chat-input">
+      <input type="text" id="messageInput" placeholder="Type a message...">
+      <button id="sendBtn">Send</button>
+    </div>
+    <div class="emoji-picker" id="emojiPicker">
+      <span onclick="addEmoji('❤️')">❤️</span><span onclick="addEmoji('😍')">😍</span><span onclick="addEmoji('😘')">😘</span>
+      <span onclick="addEmoji('😊')">😊</span><span onclick="addEmoji('💌')">💌</span><span onclick="addEmoji('💕')">💕</span>
+      <span onclick="addEmoji('💖')">💖</span><span onclick="addEmoji('💞')">💞</span><span onclick="addEmoji('💓')">💓</span>
+    </div>
+  </div>
+</div>
+
+<!-- Call UI -->
+<div id="callContainer">
+  <video id="localVideo" autoplay muted width="150"></video>
+  <video id="remoteVideo" autoplay width="300"></video>
+  <div id="callType"></div>
+  <div id="callTimer">00:00</div>
+  <button onclick="endCall()">End Call</button>
+</div>
+<div id="incomingCall">
+  <p id="callerInfo"></p>
+  <button class="accept" onclick="acceptCall()">Accept</button>
+  <button class="decline" onclick="declineCall()">Decline</button>
+</div>
+<audio id="ringtone" src="https://actions.google.com/sounds/v1/alarms/phone_alerts.mp3" loop></audio>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+import { getDatabase, ref, push, set, onChildAdded, onValue, get } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
+  authDomain: "bubblechat-8b913.firebaseapp.com",
+  databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
+  projectId: "bubblechat-8b913",
+  storageBucket: "bubblechat-8b913.appspot.com",
+  messagingSenderId: "890679022385",
+  appId: "1:890679022385:web:0391f6e09e0efdaa661610"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+let userName = "";
+let messagesRef = ref(db,'messages');
+
+// ========== LOGIN ==========
+async function login(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth,email,password);
+    const user = userCredential.user;
+    if(email.includes("anuradha")) userName="Anuradha";
+    else if(email.includes("chandkishor")) userName="Chand Kishor";
+    else { alert("Not allowed"); return; }
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("chatApp").style.display="block";
+    initChat();
+  } catch(err){ document.getElementById("loginError").innerText=err.message; }
+}
+
+// ========== CHAT ==========
+function initChat(){
+  const inputField=document.getElementById('messageInput');
+  const sendBtn=document.getElementById('sendBtn');
+  const messagesDiv=document.getElementById('messages');
+  const typingDiv=document.getElementById('typing');
+  const emojiPicker=document.getElementById('emojiPicker');
+  const recordBtn=document.getElementById('recordBtn');
+
+  sendBtn.addEventListener('click',()=>{
+    const msg=inputField.value.trim();
+    if(!msg) return;
+    push(messagesRef,{sender:userName,message:msg,timestamp:Date.now(),type:'text'});
+    inputField.value='';
+  });
+  inputField.addEventListener('keypress',e=>{if(e.key==='Enter') sendBtn.click();});
+
+  onChildAdded(messagesRef,data=>{
+    const msg=data.val();
+    const div=document.createElement('div');
+    div.classList.add('message',msg.sender===userName?'sent':'received');
+    let content= msg.type==='text'? msg.message : (msg.type==='image'? `<img src="${msg.message}" style="max-width:200px;border-radius:10px;">` : `<audio controls src="${msg.message}"></audio>`);
+    div.innerHTML=content+`<div class="timestamp">${new Date(msg.timestamp).toLocaleTimeString()}</div>`;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop=messagesDiv.scrollHeight;
+  });
+
+  inputField.addEventListener('input',()=>set(ref(db,'typing/'+userName),inputField.value!==''));
+  onValue(ref(db,'typing'),snap=>{
+    let t=[]; snap.forEach(s=>{if(s.key!==userName&&s.val())t.push(s.key);});
+    typingDiv.textContent=t.length>0?t.join(',')+" is typing...":"";
+  });
+
+  window.toggleEmoji=()=>{emojiPicker.style.display=emojiPicker.style.display==='none'?'flex':'none';};
+  window.addEmoji=(e)=>{inputField.value+=e;emojiPicker.style.display='none';};
+  window.sendImage=(event)=>{
+    const file=event.target.files[0]; if(!file) return;
+    const r=new FileReader();
+    r.onload=(e)=>{push(messagesRef,{sender:userName,message:e.target.result,timestamp:Date.now(),type:'image'});};
+    r.readAsDataURL(file);
+  };
+
+  let mediaRecorder,chunks=[];
+  recordBtn.onclick=async ()=>{
+    if(recordBtn.dataset.recording!=='true'){
+      const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      mediaRecorder=new MediaRecorder(stream);
+      mediaRecorder.start();recordBtn.dataset.recording='true';recordBtn.textContent='⏹';
+      chunks=[];mediaRecorder.ondataavailable=e=>chunks.push(e.data);
+      mediaRecorder.onstop=()=>{
+        const blob=new Blob(chunks,{type:'audio/webm'});
+        const r=new FileReader();
+        r.onload=(e)=>{push(messagesRef,{sender:userName,message:e.target.result,timestamp:Date.now(),type:'audio'});};
+        r.readAsDataURL(blob);
+      };
+    }else{mediaRecorder.stop();recordBtn.dataset.recording='false';recordBtn.textContent='🎤';}
+  };
+}
+
+// ========== CALL ==========
+let localStream,pc,callId,callTimerInterval;
+const servers={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+const callContainer=document.getElementById('callContainer');
+const incomingCallDiv=document.getElementById('incomingCall');
+const localVideo=document.getElementById('localVideo');
+const remoteVideo=document.getElementById('remoteVideo');
+const callTypeDiv=document.getElementById('callType');
+const callTimer=document.getElementById('callTimer');
+const ringtone=document.getElementById('ringtone');
+
+window.startCall=async (type)=>{
+  callId="call_shared";
+  const callRef=ref(db,'calls/'+callId);
+  localStream=await navigator.mediaDevices.getUserMedia({video:type==='video',audio:true});
+  localVideo.srcObject=localStream;
+  pc=new RTCPeerConnection(servers);
+  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+  pc.ontrack=e=>{remoteVideo.srcObject=e.streams[0];};
+  pc.onicecandidate=e=>{if(e.candidate) push(ref(db,'calls/'+callId+'/candidates'),e.candidate.toJSON());};
+
+  const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+  await set(callRef,{from:userName,type:type,offer:offer});
+
+  onValue(callRef,async snap=>{
+    const d=snap.val();if(!d) return;
+    if(d.answer&&!pc.currentRemoteDescription){await pc.setRemoteDescription(d.answer);startCallTimer();}
+  });
+
+  onChildAdded(ref(db,'calls/'+callId+'/candidates'),s=>{
+    pc.addIceCandidate(new RTCIceCandidate(s.val()));
+  });
+
+  callContainer.style.display='flex';
+  callTypeDiv.textContent=type==='video'?'Video Call':'Audio Call';
+};
+
+window.acceptCall=async ()=>{
+  incomingCallDiv.style.display='none';ringtone.pause();
+  localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  localVideo.srcObject=localStream;
+  pc=new RTCPeerConnection(servers);
+  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+  pc.ontrack=e=>{remoteVideo.srcObject=e.streams[0];};
+  pc.onicecandidate=e=>{if(e.candidate) push(ref(db,'calls/'+callId+'/candidates'),e.candidate.toJSON());};
+
+  const snap=await get(ref(db,'calls/'+callId));
+  const offer=snap.val().offer;
+  await pc.setRemoteDescription(offer);
+  const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
+  await set(ref(db,'calls/'+callId+'/answer'),answer);
+
+  onChildAdded(ref(db,'calls/'+callId+'/candidates'),s=>{pc.addIceCandidate(new RTCIceCandidate(s.val()));});
+  callContainer.style.display='flex';startCallTimer();
+};
+
+window.declineCall=()=>{incomingCallDiv.style.display='none';ringtone.pause();set(ref(db,'calls/'+callId),null);};
+window.endCall=()=>{if(pc){pc.close();pc=null;}if(localStream){localStream.getTracks().forEach(t=>t.stop());}
+  callContainer.style.display='none';clearInterval(callTimerInterval);callTimer.textContent='00:00';set(ref(db,'calls/'+callId),null);};
+
+onValue(ref(db,'calls'),snap=>{
+  const calls=snap.val();if(!calls) return;
+  for(let id in calls){const c=calls[id];if(c.from!==userName){callId=id;incomingCallDiv.style.display='flex';document.getElementById('callerInfo').textContent=`${c.from} is calling (${c.type})...`;ringtone.play();}}
+});
+
+function startCallTimer(){let sec=0;callTimerInterval=setInterval(()=>{sec++;let m=Math.floor(sec/60).toString().padStart(2,'0');let s=(sec%60).toString().padStart(2,'0');callTimer.textContent=`${m}:${s}`;},1000);}
+</script>
+</body>
+</html>
