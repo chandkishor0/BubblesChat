@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-<div class="container">
+<div class="container login-container">
   <div class="flip-card">
     <div class="flip-card-inner" id="flipCard">
       <!-- Front (Login) -->
@@ -26,7 +26,7 @@
         <h2>Signup</h2>
         <input type="text" placeholder="Email">
         <input type="password" placeholder="Password">
-        <button>Signup</button>
+        <button disabled>Signup</button>
         <p class="toggle-text" onclick="flipCard()">Login</p>
       </div>
     </div>
@@ -54,8 +54,8 @@ firebase.initializeApp(firebaseConfig);
 
 // Login function
 document.getElementById('loginBtn').addEventListener('click', function(){
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
 
   if((email==="Anuradha@gmail.com" && password==="Chand Kishor") ||
      (email==="ChandKishor@gmail.com" && password==="Anuradha")) {
