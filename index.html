@@ -1,268 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bubble Love Chat 💖</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bubble Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f0f2f5; }
+    .login-overlay { position:fixed; top:0; left:0; right:0; bottom:0;
+      background:#fff; display:flex; justify-content:center; align-items:center; flex-direction:column; z-index:10; }
+    .login-box { padding:20px; border-radius:12px; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.2); }
+    .login-box input { width:250px; padding:10px; margin:5px 0; border-radius:8px; border:1px solid #ccc; }
+    .login-box button { width:100%; padding:10px; background:#2196F3; border:none; color:#fff; border-radius:8px; cursor:pointer; font-size:16px; }
+    .chat-container { display:none; height:100vh; position:relative; }
+    #messages { height:calc(100vh - 140px); overflow-y:auto; padding:10px; }
+    .msg { padding:8px 12px; border-radius:12px; margin:5px; max-width:70%; position:relative; }
+    .sent { background:#DCF8C6; align-self:flex-end; }
+    .received { background:#fff; border:1px solid #ddd; }
+    .msg small { font-size:10px; color:gray; position:absolute; bottom:2px; right:8px; }
+    .input-row { display:flex; gap:5px; align-items:center; padding:8px; background:#fff; position:sticky; bottom:0; }
+    #messageInput { flex:1; padding:10px; border:1px solid #ccc; border-radius:10px; }
+    button { border:none; padding:10px 14px; border-radius:10px; cursor:pointer; }
+    .upload-btn { background:#4CAF50; color:white; }
+    .send-btn { background:tomato; color:white; }
+    .clear-btn { background:#e91e63; color:white; margin:8px; border-radius:8px; padding:6px 10px; }
+    .typing { font-size:12px; color:gray; margin-left:10px; }
+    .call-buttons { position:absolute; top:10px; right:15px; display:flex; gap:8px; }
+    .call-btn { background:#2196F3; border-radius:50%; padding:10px; cursor:pointer; color:white; font-size:18px; }
+    .video-btn { background:#9C27B0; }
+    .incoming-call { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; flex-direction:column; color:white; z-index:20; }
+    .incoming-call button { margin:10px; padding:12px 20px; border-radius:8px; }
+    .accept { background:green; color:white; }
+    .reject { background:red; color:white; }
+  </style>
+</head>
+<body>
 
-<!-- Firebase SDKs -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>Login to Bubble Chat</h2>
+    <input type="text" id="username" placeholder="Enter username (Anuradha / Chand Kishor)">
+    <input type="password" id="password" placeholder="Enter password">
+    <button onclick="login()">Enter Chat</button>
+  </div>
+</div>
+
+<div class="chat-container" id="chatContainer">
+  <h2 id="welcome"></h2>
+
+  <div class="call-buttons">
+    <div class="call-btn" onclick="startAudioCall()">📞</div>
+    <div class="call-btn video-btn" onclick="startVideoCall()">📹</div>
+  </div>
+
+  <div id="messages"></div>
+  <div id="typing" class="typing"></div>
+
+  <div class="input-row">
+    <input type="text" id="messageInput" placeholder="Type your message..." oninput="showTyping()" />
+    <button class="send-btn" onclick="sendMessage()">Send</button>
+    <button class="upload-btn" onclick="document.getElementById('imageInput').click()">📷</button>
+    <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
+  </div>
+
+  <button class="clear-btn" onclick="clearChat()">🗑 Clear Chat</button>
+</div>
+
+<div class="incoming-call" id="incomingCall">
+  <h2>Incoming Call...</h2>
+  <button class="accept" onclick="acceptCall()">Accept</button>
+  <button class="reject" onclick="rejectCall()">Reject</button>
+</div>
+
+<audio id="ringtone" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" loop></audio>
+
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, push, set, onChildAdded, onChildChanged, remove, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getDatabase, ref, push, onChildAdded, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-// ========================
-// 🔑 Firebase Config
-// ========================
-const firebaseConfig = {
-  apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
-  authDomain: "bubblechat-8b913.firebaseapp.com",
-  databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
-  projectId: "bubblechat-8b913",
-  storageBucket: "bubblechat-8b913.firebasestorage.app",
-  messagingSenderId: "890679022385",
-  appId: "1:890679022385:web:0391f6e09e0efdaa661610"
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const storage = getStorage(app);
+  const firebaseConfig = {
+    apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
+    authDomain: "bubblechat-8b913.firebaseapp.com",
+    databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
+    projectId: "bubblechat-8b913",
+    storageBucket: "bubblechat-8b913.firebasestorage.app",
+    messagingSenderId: "890679022385",
+    appId: "1:890679022385:web:0391f6e09e0efdaa661610"
+  };
 
-// ========================
-// 💌 Users
-// ========================
-const validUsers = { "Anuradha8877":"123456", "Chand6202":"admin123" };
-let currentUser="", role="";
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-// ========================
-// 🔥 DOM References
-// ========================
-const loginDiv = document.getElementById('login');
-const chatDiv = document.getElementById('chat');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const loginBtn = document.getElementById('loginBtn');
-const loginError = document.getElementById('loginError');
+  let currentUser = null;
 
-const messagesDiv = document.getElementById('messages');
-const messageInput = document.getElementById('messageInput');
-const sendBtn = document.getElementById('sendBtn');
-const imageInput = document.getElementById('imageInput');
-const typingDiv = document.getElementById('typing');
-const clearBtn = document.getElementById('clearChat');
-const audioCallBtn = document.getElementById('audioCall');
-const videoCallBtn = document.getElementById('videoCall');
+  function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-// ========================
-// 🔒 Login Logic
-// ========================
-loginBtn.onclick = ()=>{
-    const user = usernameInput.value.trim();
-    const pass = passwordInput.value.trim();
-    if(validUsers[user] && validUsers[user]===pass){
-        currentUser=user;
-        role = (user==="Chand6202")?"admin":"user";
-        loginDiv.style.display="none";
-        chatDiv.style.display="flex";
-        initChat();
-    } else loginError.innerText="Invalid credentials!";
-};
-
-// ========================
-// 💬 Chat Logic
-// ========================
-let messagesRef;
-function initChat(){
-    messagesRef = ref(db,'messages');
-
-    // Listen new messages
-    onChildAdded(messagesRef, snapshot=>{
-        const msg = snapshot.val();
-        displayMessage(snapshot.key,msg.sender,msg.text,msg.type,msg.status);
-    });
-
-    // Listen status update
-    onChildChanged(messagesRef, snapshot=>{
-        const msg = snapshot.val();
-        updateMessageStatus(snapshot.key,msg.status);
-    });
-}
-
-// Display message in DOM
-function displayMessage(id,sender,text,type,status){
-    const div=document.createElement('div');
-    div.classList.add('message');
-    div.id=id;
-    div.classList.add(sender===currentUser?'sent':'received');
-    if(type==='image') div.innerHTML=`<img src="${text}"><div class="status">${statusIndicator(status)}</div>`;
-    else div.innerHTML=`${text}<div class="status">${statusIndicator(status)}</div>`;
-    if(role==='admin' || sender===currentUser) div.onclick=()=>deleteMessage(id);
-    messagesDiv.appendChild(div);
-    messagesDiv.scrollTop=messagesDiv.scrollHeight;
-}
-
-function updateMessageStatus(id,status){
-    const div=document.getElementById(id);
-    if(div) div.querySelector('.status').innerText=statusIndicator(status);
-}
-
-function statusIndicator(status){
-    if(status==='sent') return "✅";
-    if(status==='delivered') return "✅✅";
-    if(status==='read') return "🔵";
-    return "";
-}
-
-// Send text message
-sendBtn.onclick=()=>{
-    const text=messageInput.value.trim();
-    if(!text) return;
-    const newMsgRef = push(messagesRef);
-    set(newMsgRef,{
-        sender: currentUser,
-        text: text,
-        type: 'text',
-        status: 'sent',
-        timestamp: Date.now()
-    });
-    messageInput.value="";
-};
-
-// Send image
-imageInput.onchange = async (e)=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    const storageRef = sRef(storage,'images/'+Date.now());
-    await uploadBytes(storageRef,file);
-    const url = await getDownloadURL(storageRef);
-    const newMsgRef = push(messagesRef);
-    set(newMsgRef,{
-        sender: currentUser,
-        text: url,
-        type: 'image',
-        status: 'sent',
-        timestamp: Date.now()
-    });
-};
-
-// Delete message
-function deleteMessage(id){
-    const div=document.getElementById(id);
-    if(role==='admin' || div.classList.contains('sent')){
-        remove(ref(db,'messages/'+id));
-    } else alert("Not allowed");
-}
-
-// Clear chat (Admin only)
-clearBtn.onclick=()=>{
-    if(role==='admin') remove(messagesRef);
-    else alert("Only admin can clear chat");
-};
-
-// Typing indicator
-const typingRef = ref(db,'typing');
-messageInput.oninput=()=>{
-    set(ref(db,'typing/'+currentUser),true);
-    setTimeout(()=>set(ref(db,'typing/'+currentUser),false),2000);
-};
-
-onValue(typingRef,snapshot=>{
-    let users=[];
-    snapshot.forEach(s=>{
-        if(s.key!==currentUser && s.val()) users.push(s.key);
-    });
-    typingDiv.innerText = users.length>0?users.join(', ')+' typing...':'';
-});
-
-// ========================
-// 🎥 Audio/Video Call Logic (WebRTC)
-// ========================
-let localStream=null, peerConnection=null;
-const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
-
-// Firebase signaling
-const callRef = ref(db,'calls');
-
-// Start call
-async function startCall(video=false){
-    localStream = await navigator.mediaDevices.getUserMedia({video:video, audio:true});
-    peerConnection = new RTCPeerConnection(servers);
-    localStream.getTracks().forEach(track=>peerConnection.addTrack(track,localStream));
-
-    peerConnection.ontrack = e=>{
-        const remoteVideo = document.getElementById('remoteVideo');
-        if(remoteVideo) remoteVideo.srcObject = e.streams[0];
+    if ((username === "Anuradha" && password === "Anuradha8877") ||
+        (username === "Chand Kishor" && password === "Chand6202")) {
+      currentUser = username === "Anuradha" ? "Anuradha8877" : "Chand6202";
+      document.getElementById("loginOverlay").style.display = "none";
+      document.getElementById("chatContainer").style.display = "block";
+      document.getElementById("welcome").innerText = "Welcome " + username;
+      loadMessages();
+    } else {
+      alert("Invalid login details!");
     }
+  }
+  window.login = login;
 
-    peerConnection.onicecandidate = e=>{
-        if(e.candidate) push(callRef, {from:currentUser, candidate:e.candidate});
-    }
-
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-    push(callRef, {from:currentUser, offer:offer, video:video});
-}
-
-// Accept incoming call
-onValue(callRef,snapshot=>{
-    snapshot.forEach(async s=>{
-        const call = s.val();
-        if(call.from!==currentUser && call.offer && !peerConnection){
-            playRingtone();
-            const accept = confirm(`${call.from} is calling. Accept?`);
-            stopRingtone();
-            if(accept){
-                localStream = await navigator.mediaDevices.getUserMedia({video:call.video, audio:true});
-                peerConnection = new RTCPeerConnection(servers);
-                localStream.getTracks().forEach(track=>peerConnection.addTrack(track,localStream));
-                peerConnection.ontrack = e=>{
-                    const remoteVideo = document.getElementById('remoteVideo');
-                    if(remoteVideo) remoteVideo.srcObject = e.streams[0];
-                }
-                peerConnection.onicecandidate = e=>{
-                    if(e.candidate) push(callRef, {from:currentUser, candidate:e.candidate});
-                }
-                await peerConnection.setRemoteDescription(call.offer);
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-                push(callRef, {from:currentUser, answer:answer});
-            }
-        } else if(call.answer && peerConnection){
-            await peerConnection.setRemoteDescription(call.answer);
-        } else if(call.candidate && peerConnection){
-            await peerConnection.addIceCandidate(call.candidate);
-        }
+  function loadMessages() {
+    const messagesRef = ref(db, "messages");
+    onChildAdded(messagesRef, (data) => {
+      displayMessage(data.key, data.val());
     });
-});
+  }
 
-// Ringtone
-let audio = new Audio('https://actions.google.com/sounds/v1/alarms/ring_ring.ogg');
-function playRingtone(){ audio.loop=true; audio.play(); }
-function stopRingtone(){ audio.pause(); audio.currentTime=0; }
+  function displayMessage(id, msg) {
+    const msgDiv = document.createElement("div");
+    msgDiv.classList.add("msg");
+    msgDiv.classList.add(msg.user === currentUser ? "sent" : "received");
 
-// Audio/video buttons
-audioCallBtn.onclick = ()=>startCall(false);
-videoCallBtn.onclick = ()=>startCall(true);
+    if (msg.text) msgDiv.innerHTML = msg.text;
+    if (msg.image) msgDiv.innerHTML = `<img src="${msg.image}" style="max-width:200px;border-radius:8px;">`;
 
+    let status = msg.status || "sent";
+    let tick = status === "sent" ? "✅" : status === "delivered" ? "✅✅" : "🔵";
+    msgDiv.innerHTML += `<br><small>${tick}</small>`;
+
+    msgDiv.onclick = () => {
+      if (currentUser === "Chand6202" || (currentUser === msg.user)) {
+        remove(ref(db, "messages/" + id));
+        msgDiv.remove();
+      }
+    };
+
+    document.getElementById("messages").appendChild(msgDiv);
+    document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+
+    if (msg.user !== currentUser) {
+      update(ref(db, "messages/" + id), { status: "delivered" });
+      setTimeout(() => {
+        update(ref(db, "messages/" + id), { status: "read" });
+      }, 2000);
+    }
+  }
+
+  function sendMessage() {
+    const text = document.getElementById("messageInput").value;
+    if (text.trim() === "") return;
+    push(ref(db, "messages"), { text, user: currentUser, status: "sent" });
+    document.getElementById("messageInput").value = "";
+  }
+  window.sendMessage = sendMessage;
+
+  function sendImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      push(ref(db, "messages"), { image: e.target.result, user: currentUser, status: "sent" });
+    };
+    reader.readAsDataURL(file);
+  }
+  window.sendImage = sendImage;
+
+  function clearChat() {
+    if (currentUser === "Chand6202") {
+      set(ref(db, "messages"), {});
+      document.getElementById("messages").innerHTML = "";
+    } else {
+      alert("Only admin (Chand) can clear full chat!");
+    }
+  }
+  window.clearChat = clearChat;
+
+  function showTyping() {
+    set(ref(db, "typing"), currentUser + " is typing...");
+    setTimeout(() => set(ref(db, "typing"), ""), 1500);
+  }
+  window.showTyping = showTyping;
+
+  onValue(ref(db, "typing"), (snapshot) => {
+    document.getElementById("typing").innerText = snapshot.val() || "";
+  });
+
+  function startAudioCall() {
+    document.getElementById("incomingCall").style.display = "flex";
+    document.getElementById("ringtone").play();
+  }
+  window.startAudioCall = startAudioCall;
+
+  function startVideoCall() {
+    document.getElementById("incomingCall").style.display = "flex";
+    document.getElementById("ringtone").play();
+  }
+  window.startVideoCall = startVideoCall;
+
+  function acceptCall() {
+    document.getElementById("incomingCall").style.display = "none";
+    document.getElementById("ringtone").pause();
+    alert("Call Started!");
+  }
+  window.acceptCall = acceptCall;
+
+  function rejectCall() {
+    document.getElementById("incomingCall").style.display = "none";
+    document.getElementById("ringtone").pause();
+  }
+  window.rejectCall = rejectCall;
 </script>
 
-<!-- ======================== -->
-<!-- ❤️ CSS & Theme -->
-<!-- ======================== -->
-<style>
-body{
-    font-family: 'Poppins', sans-serif;
-    margin:0; padding:0;
-    background: linear-gradient(135deg,#ff9a9e,#fad0c4);
-    overflow:hidden;
-}
-#login,#chat{
-    display:none; height:100vh; width:100vw;
-    justify-content:center; align-items:center;
-}
-#login{ display:flex; flex-direction:column; animation: fadeIn 1s ease; }
-input,button{ padding:10px; margin:5px; border-radius:25px; border:none; outline:none; }
-button{ cursor:pointer; background:#ff6b81; color:white; transition:0.3s; }
-button:hover{ background:#ff4757; }
-#chat{ display:flex; flex-direction:column; max-width:500px; margin:auto; background: rgba(255,255,255,0.95); box-shadow:0 10px 25px rgba(0,0,0,0.3); border-radius:25px; animation: fadeIn 1s ease; }
-#messages{ flex:1; overflow-y:auto; padding:10px; }
-.message
+</body>
+</html>
