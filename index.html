@@ -1,126 +1,136 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Chand & Anuradha — Love Chat (Firebase + WebRTC)</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Chand & Anuradha — Love Chat (Full)</title>
 <style>
-  /* ---------- Page & background ---------- */
-  :root { --glass: rgba(0,0,0,0.6); --accent1:#ff758c; --accent2:#ff7eb3; }
-  html,body { height:100%; margin:0; font-family:Arial, sans-serif; background:linear-gradient(135deg,var(--accent1),var(--accent2)); -webkit-font-smoothing:antialiased; }
-  .bubble{position:absolute;bottom:-120px;transform:rotate(45deg);animation:rise 20s infinite linear; z-index:0;}
+  :root{--accent1:#ff758c;--accent2:#ff7eb3;--glass:rgba(0,0,0,0.6);}
+  html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,var(--accent1),var(--accent2));-webkit-font-smoothing:antialiased;}
+  .frame{height:100vh;display:flex;justify-content:center;align-items:center;position:relative;overflow:hidden;}
+  /* heart bubbles */
+  .bubble{position:absolute;bottom:-120px;transform:rotate(45deg);animation:rise 20s infinite linear;z-index:0;}
   .bubble::before,.bubble::after{content:"";position:absolute;border-radius:50%;}
   .bubble::before{top:-10px;left:0;background:rgba(255,255,255,0.25);}
   .bubble::after{left:10px;top:0;background:rgba(255,255,255,0.25);}
   @keyframes rise{0%{transform:translateY(0) rotate(45deg) scale(.8);opacity:.7}50%{opacity:1}100%{transform:translateY(-110vh) rotate(45deg) scale(1.4);opacity:0}}
 
-  /* ---------- Chat container ---------- */
-  .frame { height:100vh; display:flex; justify-content:center; align-items:center; }
-  .chat-container { width:95%; max-width:420px; height:90vh; background:var(--glass); backdrop-filter:blur(12px); border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,.4); color:white; display:flex; flex-direction:column; position:relative; overflow:hidden; z-index:2; }
-  .header { padding:14px 16px; text-align:center; font-size:20px; font-weight:600; }
-  #messages { flex:1; overflow:auto; padding:12px; background:rgba(255,255,255,0.04); border-radius:10px 10px 0 0; box-sizing:border-box; }
-  .message { display:inline-block; padding:8px 12px; margin:6px 0; border-radius:12px; max-width:75%; word-wrap:break-word; position:relative; }
-  .chand { background:#ffc0cb; color:#000; align-self:flex-start; }
-  .anuradha { background:#90ee90; color:#000; align-self:flex-end; margin-left:auto; }
-  .timestamp { display:block; font-size:10px; color:#eee; margin-top:6px; text-align:right; }
+  /* chat box */
+  .chat-container{width:95%;max-width:420px;height:90vh;background:var(--glass);backdrop-filter:blur(12px);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.4);color:#fff;display:none;flex-direction:column;position:relative;z-index:2;overflow:hidden;}
+  .header{padding:14px 12px;text-align:center;font-weight:700;background:rgba(255,255,255,0.03);}
+  #messages{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.02);}
+  .message{max-width:78%;padding:10px 12px;border-radius:12px;word-wrap:break-word;position:relative;align-self:flex-start;}
+  .msg-chand{background:#ffc0cb;color:#000;align-self:flex-start;}
+  .msg-anuradha{background:#90ee90;color:#000;align-self:flex-end;}
+  .timestamp{display:block;font-size:11px;color:#eee;margin-top:6px;text-align:right;}
+  .message img{max-width:100%;border-radius:8px;margin-top:8px;display:block;}
+  .message.new{animation:flip 0.6s ease;transform-origin:center;}
+  @keyframes flip{from{transform:rotateY(90deg);opacity:0}to{transform:rotateY(0);opacity:1}}
 
-  /* flip animation */
-  .message.new { animation:flip 0.6s ease; transform-origin:center; }
-  @keyframes flip { from{ transform: rotateY(90deg); opacity:0 } to{ transform: rotateY(0); opacity:1 } }
+  /* typing */
+  #typing{height:18px;text-align:center;font-size:13px;color:#e9e9e9;margin:4px 0;}
 
-  /* image inside msg */
-  .message img { width:100%; border-radius:8px; margin-top:6px; display:block; }
-
-  /* typing indicator */
-  #typing { text-align:center; font-size:13px; color:#e9e9e9; height:18px; margin:6px 0 0 0; }
-
-  /* sticky input row (mobile friendly) */
-  .input-row { position:sticky; bottom:0; display:flex; gap:8px; padding:10px 12px; align-items:center; background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.6)); backdrop-filter:blur(6px); box-sizing:border-box; }
-  #messageInput { flex:1; padding:10px 12px; border-radius:10px; border:none; outline:none; font-size:15px; }
-  button { border:none; border-radius:10px; padding:9px 12px; cursor:pointer; }
-  .send-btn { background:#ff4757; color:white; }
-  .upload-btn { background:#1e90ff; color:white; font-size:18px; }
-  .call-btn { background:#28a745; color:white; font-size:18px; }
-  .clear-btn { background:crimson; color:white; width:100%; margin:8px 12px 14px 12px; border-radius:10px; padding:10px; }
+  /* input area sticky */
+  .input-row{position:sticky;bottom:0;left:0;right:0;display:flex;gap:8px;padding:10px;background:linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.6));backdrop-filter:blur(6px);align-items:center;}
+  #messageInput{flex:1;padding:10px;border-radius:10px;border:none;outline:none;font-size:15px;background:rgba(255,255,255,0.06);color:#fff;}
+  button{padding:9px 12px;border-radius:10px;border:none;cursor:pointer;}
+  .send-btn{background:#ff4757;color:#fff;}
+  .upload-btn{background:#1e90ff;color:#fff;}
+  .call-btn{background:#28a745;color:#fff;}
+  .clear-btn{background:crimson;color:#fff;width:calc(100% - 24px);margin:8px 12px;border-radius:10px;padding:10px;}
 
   /* login overlay */
-  #loginOverlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.75); z-index:50; }
-  #loginCard { width:92%; max-width:360px; padding:20px; border-radius:12px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color:white; text-align:center; }
-  #loginCard h1 { margin:0 0 10px 0; font-size:24px; letter-spacing:0.2px; }
-  #loginCard input { width:80%; padding:10px 12px; border-radius:8px; border:none; margin:8px 0; text-align:center; }
+  #loginOverlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);z-index:50;}
+  #loginCard{width:92%;max-width:360px;padding:18px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));color:#fff;text-align:center;}
+  #loginCard h1{margin:0 0 8px;font-size:22px;}
+  #loginCard input{width:80%;padding:10px;border-radius:8px;border:none;margin:8px 0;text-align:center;font-size:15px;}
+  #loginCard button{padding:10px 14px;border-radius:8px;border:none;background:#ff4757;color:#fff;cursor:pointer;}
 
-  /* call overlay */
-  #callOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
-  #videos { width:95%; max-width:900px; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
-  video { border-radius:10px; background:#111; display:block; }
-  #localVideo { width:38%; max-width:320px; height:auto; object-fit:cover; }
-  #remoteVideo { width:58%; max-width:520px; height:auto; object-fit:cover; }
+  /* call overlay / incoming call UI */
+  #callOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+  #videos{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;width:95%;max-width:900px;}
+  video{background:#111;border-radius:10px;}
+  #localVideo{width:36%;max-width:320px;object-fit:cover;}
+  #remoteVideo{width:58%;max-width:520px;object-fit:cover;}
+  #incomingCall{display:none;background:rgba(255,255,255,0.03);padding:14px;border-radius:10px;}
+  #incomingCall button{margin:6px;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;}
+  #acceptBtn{background:#28a745;color:#fff;}
+  #declineBtn{background:#ff4757;color:#fff;}
 
-  /* responsiveness */
   @media(max-width:480px){
-    #localVideo{ width:40%; }
-    #remoteVideo{ width:56%; }
-    .message{ max-width:80%; }
+    #localVideo{width:40%}
+    #remoteVideo{width:56%}
+    .message{max-width:84%}
+    .chat-container{height:100vh;border-radius:0}
   }
 </style>
 </head>
 <body>
-  <div class="frame">
-    <!-- floating hearts -->
-    <div class="bubble" style="width:30px;height:30px;left:8%;animation-duration:18s;"></div>
-    <div class="bubble" style="width:25px;height:25px;left:30%;animation-duration:22s;"></div>
-    <div class="bubble" style="width:50px;height:50px;left:60%;animation-duration:24s;"></div>
-    <div class="bubble" style="width:18px;height:18px;left:80%;animation-duration:30s;"></div>
+<div class="frame">
+  <!-- heart bubbles -->
+  <div class="bubble" style="width:30px;height:30px;left:6%;animation-duration:18s;"></div>
+  <div class="bubble" style="width:25px;height:25px;left:28%;animation-duration:20s;"></div>
+  <div class="bubble" style="width:50px;height:50px;left:60%;animation-duration:24s;"></div>
+  <div class="bubble" style="width:18px;height:18px;left:82%;animation-duration:28s;"></div>
 
-    <div class="chat-container" role="main">
-      <div class="header" id="welcome">Love Chat</div>
-      <div id="messages" aria-live="polite"></div>
-      <div id="typing"></div>
+  <!-- Chat container (hidden until login) -->
+  <div class="chat-container" id="chatContainer" aria-live="polite">
+    <div class="header" id="welcome">Love Chat</div>
+    <div id="messages"></div>
+    <div id="typing"></div>
 
-      <div class="input-row">
-        <input id="messageInput" placeholder="Type your message..." autocomplete="off" />
-        <button class="send-btn" title="Send" id="sendBtn">Send</button>
-        <button class="upload-btn" title="Send Image" id="imgBtn">📷</button>
-        <input id="imageInput" type="file" accept="image/*" style="display:none"/>
-        <button class="call-btn" title="Voice Call" id="voiceCall">📞</button>
-        <button class="call-btn" title="Video Call" id="videoCall">🎥</button>
-      </div>
+    <div class="input-row">
+      <input id="messageInput" placeholder="Type a message..." autocomplete="off" />
+      <button id="sendBtn" class="send-btn" title="Send">Send</button>
+      <button id="imgBtn" class="upload-btn" title="Send Image">📷</button>
+      <input id="imageInput" type="file" accept="image/*" style="display:none" />
+      <button id="voiceCall" class="call-btn" title="Voice Call">📞</button>
+      <button id="videoCall" class="call-btn" title="Video Call">🎥</button>
+    </div>
 
-      <button class="clear-btn" id="clearBtn">🗑 Clear Chat (Admin)</button>
+    <button id="clearBtn" class="clear-btn">🗑 Clear Chat (Admin)</button>
+  </div>
+</div>
+
+<!-- Login overlay -->
+<div id="loginOverlay" role="dialog" aria-modal="true">
+  <div id="loginCard">
+    <h1>Welcome to Love Chat 💖</h1>
+    <input id="usernameInput" placeholder="Enter your name (Chand Kishor / Anuradha)"/>
+    <div style="margin-top:8px;">
+      <button id="enterBtn">Enter Chat</button>
+    </div>
+  </div>
+</div>
+
+<!-- Call overlay -->
+<div id="callOverlay">
+  <div id="incomingCall">
+    <div id="incomingText" style="margin-bottom:6px;color:#fff;font-weight:600;"></div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button id="acceptBtn">Accept</button>
+      <button id="declineBtn">Decline</button>
     </div>
   </div>
 
-  <!-- Login overlay -->
-  <div id="loginOverlay" aria-modal="true" role="dialog">
-    <div id="loginCard">
-      <h1>Welcome to Love Chat 💖</h1>
-      <input id="usernameInput" placeholder="Enter name (Chand Kishor / Anuradha)" />
-      <div style="margin-top:8px;">
-        <button id="enterBtn" style="background:#ff4757;color:white;padding:10px 16px;border-radius:8px;">Enter Chat</button>
-      </div>
-    </div>
+  <div id="videos">
+    <video id="localVideo" autoplay muted playsinline></video>
+    <video id="remoteVideo" autoplay playsinline></video>
   </div>
 
-  <!-- Call overlay -->
-  <div id="callOverlay">
-    <div id="videos">
-      <video id="localVideo" autoplay muted playsinline></video>
-      <video id="remoteVideo" autoplay playsinline></video>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center;">
-      <button id="endCallBtn" style="background:#ff4757;color:white;padding:10px 16px;border-radius:8px;">End Call</button>
-    </div>
+  <div>
+    <button id="endCallBtn" style="background:#ff4757;color:#fff;padding:10px 14px;border-radius:8px;border:none;">End Call</button>
   </div>
+</div>
 
-  <!-- Firebase modular SDK + app script -->
-  <script type="module">
-  /* =================== Firebase imports =================== */
+<!-- Firebase + App (module) -->
+<script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
   import {
-    getDatabase, ref, push, onChildAdded, onValue, remove, set, child, get
+    getDatabase, ref, push, onValue, onChildAdded, set, remove, child, get
   } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-  /* =================== CONFIG - replace with your Firebase config if needed =================== */
+  // ---------- Firebase config (your project) ----------
   const firebaseConfig = {
     apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
     authDomain: "bubblechat-8b913.firebaseapp.com",
@@ -130,18 +140,14 @@
     messagingSenderId: "890679022385",
     appId: "1:890679022385:web:0391f6e09e0efdaa661610"
   };
-
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  /* =================== Allowed users =================== */
-  const allowedUsers = ["Chand Kishor", "Anuradha"];
-
-  /* =================== UI references =================== */
+  // ---------- UI refs ----------
   const loginOverlay = document.getElementById('loginOverlay');
   const enterBtn = document.getElementById('enterBtn');
   const usernameInput = document.getElementById('usernameInput');
-  const chatContainer = document.querySelector('.chat-container');
+  const chatContainer = document.getElementById('chatContainer');
   const welcomeEl = document.getElementById('welcome');
   const messagesEl = document.getElementById('messages');
   const typingEl = document.getElementById('typing');
@@ -153,334 +159,313 @@
   const voiceCallBtn = document.getElementById('voiceCall');
   const videoCallBtn = document.getElementById('videoCall');
 
+  // Call UI
   const callOverlay = document.getElementById('callOverlay');
+  const incomingCallBox = document.getElementById('incomingCall');
+  const incomingText = document.getElementById('incomingText');
+  const acceptBtn = document.getElementById('acceptBtn');
+  const declineBtn = document.getElementById('declineBtn');
   const localVideo = document.getElementById('localVideo');
   const remoteVideo = document.getElementById('remoteVideo');
   const endCallBtn = document.getElementById('endCallBtn');
 
-  /* =================== State =================== */
+  // ---------- State ----------
+  const allowedUsers = ["Chand Kishor", "Anuradha"];
   let username = null;
-  let localStream = null;
   let pc = null;
+  let localStream = null;
   let currentCallId = null;
-  const iceServers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+  const iceConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-  /* ---------- Last seen time (per client) to limit flip animation re-run ---------- */
-  function getLastSeen() {
-    const v = sessionStorage.getItem('lastSeenTime');
-    return v ? parseInt(v,10) : 0;
-  }
-  function setLastSeen(t) { sessionStorage.setItem('lastSeenTime', String(t)); }
+  // for animation once-per-client: store latest message time seen in sessionStorage
+  function getLastSeen() { return Number(sessionStorage.getItem('lastSeen') || 0); }
+  function setLastSeen(t) { sessionStorage.setItem('lastSeen', String(t)); }
 
-  /* =================== Helpers: UI rendering =================== */
-  function appendMessage(msgObj) {
+  // ---------- Helpers ----------
+  function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>"']/g, (m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  function appendMessage(msg){
     const el = document.createElement('div');
     el.classList.add('message');
-    el.classList.add(msgObj.user === allowedUsers[0] ? 'chand' : 'anuradha');
+    el.classList.add(msg.user === allowedUsers[0] ? 'msg-chand' : 'msg-anuradha');
 
-    // format time
-    const timeStr = new Date(msgObj.time).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+    const t = new Date(msg.time);
+    const timeStr = t.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
 
-    if (msgObj.type === 'image') {
-      el.innerHTML = `${escapeHtml(msgObj.user)}: <br><img src="${msgObj.text}" alt="image"/><span class="timestamp">${timeStr}</span>`;
+    if(msg.type === 'image'){
+      el.innerHTML = `${escapeHtml(msg.user)}:<br><img src="${msg.text}" alt="img"/><span class="timestamp">${timeStr}</span>`;
     } else {
-      el.innerHTML = `${escapeHtml(msgObj.user)}: ${escapeHtml(msgObj.text)}<span class="timestamp">${timeStr}</span>`;
+      el.innerHTML = `${escapeHtml(msg.user)}: ${escapeHtml(msg.text)}<span class="timestamp">${timeStr}</span>`;
     }
 
-    // animate only if msg.time is newer than lastSeen stored for this client
+    // only animate if message time is newer than lastSeen
     const lastSeen = getLastSeen();
-    if (msgObj.time > lastSeen) {
-      el.classList.add('new');
-    }
+    if(msg.time > lastSeen){ el.classList.add('new'); }
 
     messagesEl.appendChild(el);
   }
 
-  function escapeHtml(s) {
-    if (!s) return '';
-    return s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
-
-  function scrollToBottom() {
+  function scrollToBottom(){
     messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
-    // update last seen time so animation won't repeat afterwards
     setLastSeen(Date.now());
   }
 
-  /* =================== Chat: send text & image =================== */
-  async function sendText() {
+  // ---------- Chat (text + image) ----------
+  async function sendText(){
     const text = messageInput.value.trim();
-    if (!text) return;
-    const payload = { user: username, text, type: 'text', time: Date.now() };
-    await push(ref(db, 'messages'), payload);
+    if(!text) return;
+    await push(ref(db, 'messages'), { user: username, text, type: 'text', time: Date.now() });
     messageInput.value = '';
     hideTyping();
   }
 
-  function handleImageSelect(e) {
+  function handleImage(e){
     const file = e.target.files[0];
-    if (!file) return;
+    if(!file) return;
     const reader = new FileReader();
     reader.onload = async (ev) => {
       const dataUrl = ev.target.result;
-      const payload = { user: username, text: dataUrl, type: 'image', time: Date.now() };
-      await push(ref(db, 'messages'), payload);
+      await push(ref(db, 'messages'), { user: username, text: dataUrl, type: 'image', time: Date.now() });
       imageInput.value = '';
     };
     reader.readAsDataURL(file);
   }
 
-  /* =================== Typing indicator =================== */
+  // typing indicator
   let typingTimeout = null;
-  function showTyping() {
+  function showTyping(){
     set(ref(db, 'typing'), username + ' is typing...');
-    if (typingTimeout) clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(() => {
-      hideTyping();
-    }, 2000);
+    if(typingTimeout) clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(()=>{ hideTyping(); }, 1800);
   }
-  function hideTyping() {
-    remove(ref(db, 'typing')).catch(()=>{});
-  }
+  function hideTyping(){ remove(ref(db, 'typing')).catch(()=>{}); }
 
-  /* =================== Listeners: messages & typing =================== */
-  function listenMessages() {
-    // initial load via onValue - we will clear and append in chronological order
-    onValue(ref(db, 'messages'), snapshot => {
+  // listen messages
+  function listenMessages(){
+    onValue(ref(db, 'messages'), snapshot=>{
       messagesEl.innerHTML = '';
-      const msgs = [];
-      snapshot.forEach(child => {
-        const v = child.val();
-        msgs.push(v);
-      });
-      // sort by time to be safe
-      msgs.sort((a,b)=>a.time - b.time);
-      msgs.forEach(m => appendMessage(m));
+      const arr = [];
+      snapshot.forEach(child => arr.push(child.val()));
+      arr.sort((a,b)=>a.time - b.time);
+      arr.forEach(m => appendMessage(m));
       scrollToBottom();
     });
   }
 
-  function listenTyping() {
-    onValue(ref(db, 'typing'), snapshot => {
-      const val = snapshot.val();
-      typingEl.innerText = val && !val.startsWith(username) ? val : '';
+  function listenTyping(){
+    onValue(ref(db, 'typing'), snap=>{
+      const v = snap.val();
+      typingEl.innerText = v && !v.startsWith(username) ? v : '';
     });
   }
 
-  /* =================== WebRTC Call / Signaling =================== */
-  // We'll create call entries under /calls/<callId>:
-  // { caller: 'Name', type: 'offer', isVideo: boolean, offer: {sdp,...} } and later /calls/<callId>/answer
-  // ICE candidates live under /callCandidates/<callId>/<pushId> with { candidate, user }
+  // ---------- WebRTC calling (with Firebase signaling) ----------
+  // Paths: /calls/<callId> holds offer + metadata and answer as child; /callCandidates/<callId> holds candidates pushed by both peers.
 
-  async function startCall(isVideo) {
+  async function startCall(isVideo){
     try {
-      // create peer connection
-      pc = new RTCPeerConnection(iceServers);
+      // create RTCPeerConnection
+      pc = new RTCPeerConnection(iceConfig);
 
-      // get user media
+      // get local stream
       localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!isVideo });
       localVideo.srcObject = localStream;
 
-      // attach tracks
-      localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+      // add tracks
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-      // remote track
-      pc.ontrack = (e) => {
-        remoteVideo.srcObject = e.streams[0];
-      };
+      // on remote stream
+      pc.ontrack = (e) => { remoteVideo.srcObject = e.streams[0]; };
 
-      // collect ICE and push to DB
+      // gather ICE and push to DB
       pc.onicecandidate = (evt) => {
-        if (evt.candidate && currentCallId) {
+        if(evt.candidate && currentCallId){
           push(ref(db, `callCandidates/${currentCallId}`), { candidate: evt.candidate.toJSON(), user: username });
         }
       };
 
       // create offer
-      const offerDesc = await pc.createOffer();
-      await pc.setLocalDescription(offerDesc);
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
 
-      // push call entry (offer) and store callId
+      // create call record
       const callRef = push(ref(db, 'calls'));
       currentCallId = callRef.key;
-      await set(callRef, { caller: username, type: 'offer', isVideo: !!isVideo, offer: offerDesc, time: Date.now() });
+      await set(callRef, { caller: username, type: 'offer', isVideo: !!isVideo, offer, time: Date.now() });
 
-      // show overlay
-      callOverlay.style.display = 'flex';
+      // show our call UI
+      showCallOverlay(false);
 
-      // listen for answer & candidates
-      listenCallAnswer(currentCallId);
-      listenCallCandidates(currentCallId); // will handle remote candidates
+      // listen for answer and remote candidates
+      listenForAnswer(currentCallId);
+      listenForCandidates(currentCallId);
+
     } catch (err) {
-      console.error('startCall error', err);
-      alert('Unable to start call. Give camera/mic permission and try again.');
+      console.error('startCall err', err);
       cleanupCall();
+      alert('Could not start call — allow camera/mic and try again.');
     }
   }
 
-  // When receiving an offer (someone else pushed a call), prompt to accept
-  function listenIncomingOffers() {
-    onChildAdded(ref(db, 'calls'), async (snap) => {
+  // Listen incoming offers (others push to /calls)
+  function listenIncomingOffers(){
+    onChildAdded(ref(db, 'calls'), async snap=>{
       const call = snap.val();
       const callId = snap.key;
-      if (!call || call.caller === username) return; // ignore your own offers
+      if(!call) return;
+      if(call.caller === username) return; // ignore own offers
 
-      // If there is already an active pc or call, ignore (or you can prompt busy)
-      if (pc) {
-        // optionally decline by removing call or leaving it - here we ignore
-        console.log('Already in call, ignoring incoming offer');
+      // if already in call, ignore or optionally show busy
+      if(pc) {
+        // ignore incoming when busy
         return;
       }
 
-      const accept = confirm(`${call.caller} is calling ${call.isVideo ? 'with video' : 'voice'}. Accept?`);
-      if (!accept) {
-        // optional: remove the offer if you want callers to get declined status
-        return;
-      }
+      // show incoming UI
+      incomingText.innerText = `${call.caller} is calling (${call.isVideo ? 'video' : 'voice'})`;
+      incomingCallBox.style.display = 'block';
+      callOverlay.style.display = 'flex';
 
-      try {
-        // create pc and local stream (match isVideo)
-        pc = new RTCPeerConnection(iceServers);
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!call.isVideo });
-        localVideo.srcObject = localStream;
-        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+      // accept/decline handlers
+      const acceptHandler = async () => {
+        incomingCallBox.style.display = 'none';
+        try {
+          pc = new RTCPeerConnection(iceConfig);
+          localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video: !!call.isVideo });
+          localVideo.srcObject = localStream;
+          localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
-        pc.ontrack = (e) => remoteVideo.srcObject = e.streams[0];
+          pc.ontrack = (e) => { remoteVideo.srcObject = e.streams[0]; };
+          pc.onicecandidate = (evt) => {
+            if(evt.candidate){
+              push(ref(db, `callCandidates/${callId}`), { candidate: evt.candidate.toJSON(), user: username });
+            }
+          };
 
-        pc.onicecandidate = (evt) => {
-          if (evt.candidate) {
-            push(ref(db, `callCandidates/${callId}`), { candidate: evt.candidate.toJSON(), user: username });
-          }
-        };
+          // set remote offer
+          await pc.setRemoteDescription(call.offer);
+          // create answer
+          const ans = await pc.createAnswer();
+          await pc.setLocalDescription(ans);
+          // add answer under calls/<callId>/answer
+          await set(child(ref(db, `calls/${callId}`), 'answer'), ans);
+          currentCallId = callId;
+          // listen for candidates
+          listenForCandidates(callId);
+        } catch(err){
+          console.error('answer err', err);
+          cleanupCall();
+          alert('Unable to answer call.');
+        }
+      };
 
-        // set remote description (offer)
-        await pc.setRemoteDescription(call.offer);
+      const declineHandler = () => {
+        incomingCallBox.style.display = 'none';
+        callOverlay.style.display = 'none';
+        // optionally remove the offer so caller knows; here we leave it.
+      };
 
-        // create answer
-        const answerDesc = await pc.createAnswer();
-        await pc.setLocalDescription(answerDesc);
-
-        // store answer under the same callId
-        await set(child(ref(db, `calls/${callId}`), 'answer'), answerDesc);
-
-        // set currentCallId and show overlay
-        currentCallId = callId;
-        callOverlay.style.display = 'flex';
-
-        // listen for candidates for this call
-        listenCallCandidates(callId);
-      } catch (err) {
-        console.error('Error answering call', err);
-        cleanupCall();
-      }
+      // set buttons (remove previous handlers first)
+      acceptBtn.onclick = acceptHandler;
+      declineBtn.onclick = declineHandler;
     });
   }
 
-  // Listen for answer to our offer (caller side)
-  function listenCallAnswer(callId) {
-    const answerRef = child(ref(db, `calls/${callId}`), 'answer');
-    onValue(answerRef, async snap => {
+  // Listen for answer to our offer
+  function listenForAnswer(callId){
+    onValue(child(ref(db, `calls/${callId}`), 'answer'), async snap=>{
       const ans = snap.val();
-      if (!ans || !pc) return;
-      try {
-        await pc.setRemoteDescription(ans);
-      } catch (e) { console.warn('setRemoteDescription answer failed', e); }
+      if(!ans || !pc) return;
+      try { await pc.setRemoteDescription(ans); } catch(e){ console.warn('setRemoteDescription failed', e); }
     });
   }
 
-  // Listen for ICE candidates under callCandidates/<callId>
-  function listenCallCandidates(callId) {
-    // initial load and subsequent additions
-    onChildAdded(ref(db, `callCandidates/${callId}`), async (snap) => {
+  // listen for remote ICE candidates and add to pc
+  function listenForCandidates(callId){
+    onChildAdded(ref(db, `callCandidates/${callId}`), async snap=>{
       const val = snap.val();
-      if (!val || !val.candidate || !pc) return;
+      if(!val || !val.candidate) return;
       try {
-        await pc.addIceCandidate(val.candidate);
-      } catch (e) {
-        console.warn('addIceCandidate failed', e);
-      }
+        if(pc) await pc.addIceCandidate(val.candidate);
+      } catch(e){ console.warn('addIceCandidate err', e); }
     });
   }
 
-  // End / cleanup current call
-  async function endCall() {
-    if (pc) { try { pc.close(); } catch(_){} pc = null; }
-    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  // end call
+  async function endCall(){
+    // stop pc & tracks
+    if(pc){ try { pc.close(); } catch(_){} pc = null; }
+    if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
     localVideo.srcObject = null; remoteVideo.srcObject = null;
     callOverlay.style.display = 'none';
+    incomingCallBox.style.display = 'none';
 
-    // remove signaling (clean up both call and candidates)
-    if (currentCallId) {
+    if(currentCallId){
       try {
         await remove(ref(db, `calls/${currentCallId}`));
         await remove(ref(db, `callCandidates/${currentCallId}`));
-      } catch (e) { console.warn('cleanup remote sign', e); }
+      } catch(e){ console.warn('cleanup err', e); }
       currentCallId = null;
     }
   }
 
-  function cleanupCall() { // local reset if something fails
-    if (pc) { try { pc.close(); } catch(_){} pc = null; }
-    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  function cleanupCall(){
+    if(pc){ try{ pc.close(); } catch(_){} pc = null; }
+    if(localStream){ localStream.getTracks().forEach(t => t.stop()); localStream = null; }
     localVideo.srcObject = null; remoteVideo.srcObject = null;
     callOverlay.style.display = 'none';
+    incomingCallBox.style.display = 'none';
     currentCallId = null;
   }
 
-  /* =================== Event wiring & login =================== */
+  function showCallOverlay(showIncoming){
+    callOverlay.style.display = 'flex';
+    incomingCallBox.style.display = showIncoming ? 'block' : 'none';
+  }
+
+  // ---------- Wiring UI events ----------
   enterBtn.onclick = () => {
-    const input = usernameInput.value.trim();
-    if (!allowedUsers.includes(input)) {
-      alert('Only Chand Kishor or Anuradha can enter 💔');
-      return;
+    const val = usernameInput.value.trim();
+    if(!allowedUsers.includes(val)){
+      alert('Only Chand Kishor or Anuradha can enter 💔'); return;
     }
-    username = input;
+    username = val;
     loginOverlay.style.display = 'none';
     chatContainer.style.display = 'flex';
     welcomeEl.textContent = `Welcome, ${username}`;
+    setLastSeen(Date.now());
     // start listeners
     listenMessages();
     listenTyping();
     listenIncomingOffers();
-    // store lastSeen baseline
-    setLastSeen(Date.now());
   };
 
-  // send on click or Enter
   sendBtn.onclick = sendText;
-  messageInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      sendText();
-    }
-    // show typing on any key
+  messageInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); sendText(); }
     showTyping();
   });
 
-  imgBtn.onclick = () => imageInput.click();
-  imageInput.addEventListener('change', handleImageSelect);
+  imgBtn.onclick = ()=> imageInput.click();
+  imageInput.addEventListener('change', handleImage);
 
-  clearBtn.onclick = () => {
-    if (!confirm('Clear chat for everyone? This will remove all messages from the database.')) return;
+  clearBtn.onclick = ()=>{
+    if(!confirm('Clear chat for everyone?')) return;
     remove(ref(db, 'messages')).catch(console.warn);
   };
 
-  // call buttons
-  voiceCallBtn.onclick = () => startCall(false);
-  videoCallBtn.onclick = () => startCall(true);
-  endCallBtn.onclick = () => endCall();
+  voiceCallBtn.onclick = ()=> startCall(false);
+  videoCallBtn.onclick = ()=> startCall(true);
+  endCallBtn.onclick = ()=> endCall();
 
-  // typing hide on page unload
-  window.addEventListener('beforeunload', () => {
+  // hide typing & end call on unload
+  window.addEventListener('beforeunload', ()=>{
     hideTyping();
-    // also try to end call gracefully
-    endCall().catch(()=>{});
+    try{ endCall(); }catch(e){}
   });
 
-  // simple helper to push data into DB (text messages)
-  // listenMessages is done above with onValue
-
-  /* =================== Setup DB -> messages listener on initial load =================== */
-  // Implementation uses onValue inside listenMessages() which was wired on enter.
-
-  /* ============
+  // ---------- Start (nothing auto runs until login) ----------
+  // done
+</script>
+</body>
+</html>
