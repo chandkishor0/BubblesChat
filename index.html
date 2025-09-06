@@ -12,12 +12,13 @@
 
   /* Login Overlay */
   .login-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.9); display:flex; justify-content:center; align-items:center; z-index:10; }
-  .login-box { padding:20px; border-radius:12px; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.2); display:flex; flex-direction:column; align-items:center; }
-  .login-box input { width:220px; padding:10px; margin:5px 0; border-radius:8px; border:1px solid #ccc; }
-  .login-box button { width:100%; padding:10px; background:#2196F3; border:none; color:#fff; border-radius:8px; cursor:pointer; font-size:16px; }
+  .login-box { padding:25px; border-radius:15px; background:#fff; box-shadow:0 6px 15px rgba(0,0,0,0.3); display:flex; flex-direction:column; align-items:center; }
+  .login-box input { width:220px; padding:12px; margin:7px 0; border-radius:10px; border:1px solid #ccc; font-size:14px; }
+  .login-box button { width:100%; padding:12px; background:#2196F3; border:none; color:#fff; border-radius:10px; cursor:pointer; font-size:16px; transition:0.3s; }
+  .login-box button:hover { background:#1976D2; }
 
   /* Chat Container */
-  .chat-container { display:none; position:relative; width:100%; max-width:420px; height:90vh; backdrop-filter:blur(10px); background:rgba(0,0,0,0.4); border-radius:20px; display:flex; flex-direction:column; color:white; box-shadow:0px 0px 20px rgba(0,0,0,0.5); }
+  .chat-container { display:none; position:relative; width:100%; max-width:420px; height:90vh; backdrop-filter:blur(10px); background:rgba(0,0,0,0.4); border-radius:20px; display:flex; flex-direction:column; color:white; box-shadow:0px 0px 25px rgba(0,0,0,0.6); }
   #messages { flex:1; overflow-y:auto; padding:10px; }
   .msg { padding:8px 12px; border-radius:12px; margin:5px; max-width:70%; word-wrap:break-word; position:relative; }
   .sent { background:#DCF8C6; align-self:flex-end; color:black; }
@@ -30,14 +31,16 @@
   .clear-btn { background:#e91e63; color:white; border-radius:10px; padding:6px 10px; margin:5px; }
   .typing { font-size:12px; color:#ddd; margin-left:10px; height:15px; }
   .call-buttons { position:absolute; top:10px; right:15px; display:flex; gap:8px; }
-  .call-btn { background:#2196F3; border-radius:50%; padding:10px; cursor:pointer; color:white; font-size:18px; }
+  .call-btn { background:#2196F3; border-radius:50%; padding:10px; cursor:pointer; color:white; font-size:18px; transition:0.3s; }
+  .call-btn:hover { opacity:0.8; }
   .video-btn { background:#9C27B0; }
 
   /* Incoming Call */
   .incoming-call { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; flex-direction:column; color:white; z-index:20; }
-  .incoming-call button { margin:10px; padding:12px 20px; border-radius:8px; }
+  .incoming-call button { margin:10px; padding:12px 20px; border-radius:8px; cursor:pointer; font-size:16px; transition:0.2s; }
   .accept { background:green; color:white; }
   .reject { background:red; color:white; }
+  .incoming-call button:hover { opacity:0.9; }
 
   /* Images in chat */
   .msg img { max-width:200px; border-radius:8px; margin-top:5px; }
@@ -66,8 +69,8 @@
   <h2 id="welcome"></h2>
 
   <div class="call-buttons">
-    <div class="call-btn" onclick="startAudioCall()">📞</div>
-    <div class="call-btn video-btn" onclick="startVideoCall()">📹</div>
+    <div class="call-btn" onclick="startCall('audio')">📞</div>
+    <div class="call-btn video-btn" onclick="startCall('video')">📹</div>
   </div>
 
   <div id="messages"></div>
@@ -86,15 +89,15 @@
 <!-- Incoming call -->
 <div class="incoming-call" id="incomingCall">
   <h2>Incoming Call...</h2>
-  <button class="accept" onclick="acceptCall()">Accept</button>
-  <button class="reject" onclick="rejectCall()">Reject</button>
+  <button class="accept">Accept</button>
+  <button class="reject">Reject</button>
 </div>
 
 <audio id="ringtone" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" loop></audio>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getDatabase, ref, push, onChildAdded, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+  import { getDatabase, ref, push, onChildAdded, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
@@ -111,36 +114,38 @@
 
   let currentUser = null;
 
-  function login() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-    if ((username==="Anuradha" && password==="Anuradha8877") ||
-        (username==="Chand Kishor" && password==="Chand6202")) {
-      currentUser = username==="Anuradha"? "Anuradha8877":"Chand6202";
-      document.getElementById("loginOverlay").style.display="none";
-      document.getElementById("chatContainer").style.display="flex";
-      document.getElementById("welcome").innerText = "Welcome " + username;
-      loadMessages();
-    } else alert("Invalid login!");
+  function login(){
+    const uname = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    if(uname==="Anuradha" && pass==="Anuradha8877") currentUser="Anuradha8877";
+    else if(uname==="Chand Kishor" && pass==="Chand6202") currentUser="Chand6202";
+    else { alert("Invalid login!"); return; }
+
+    document.getElementById("loginOverlay").style.display="none";
+    document.getElementById("chatContainer").style.display="flex";
+    document.getElementById("welcome").innerText = "Welcome " + uname;
+    loadMessages();
+    listenCalls();
   }
   window.login = login;
 
-  function loadMessages() {
-    const messagesRef = ref(db,"messages");
-    onChildAdded(messagesRef, (data)=> displayMessage(data.key, data.val()));
+  // ------------------ Chat ------------------
+  function loadMessages(){
+    const msgRef = ref(db,"messages");
+    onChildAdded(msgRef, (snap)=> displayMessage(snap.key, snap.val()));
   }
 
   function displayMessage(id,msg){
     const div = document.createElement("div");
-    div.classList.add("msg");
-    div.classList.add(msg.user===currentUser?"sent":"received");
+    div.classList.add("msg", msg.user===currentUser?"sent":"received");
     if(msg.text) div.innerHTML = msg.text;
     if(msg.image) div.innerHTML = `<img src="${msg.image}">`;
     let tick = msg.status==="sent"?"✅":msg.status==="delivered"?"✅✅":"🔵";
     div.innerHTML += `<br><small>${tick}</small>`;
     div.onclick = ()=>{
       if(currentUser==="Chand6202" || currentUser===msg.user){
-        remove(ref(db,"messages/"+id)); div.remove();
+        remove(ref(db,"messages/"+id));
+        div.remove();
       }
     }
     document.getElementById("messages").appendChild(div);
@@ -189,31 +194,35 @@
     document.getElementById("typing").innerText=snap.val()||"";
   });
 
-  function startAudioCall(){
-    document.getElementById("incomingCall").style.display="flex";
-    document.getElementById("ringtone").play();
+  // ------------------ Calls ------------------
+  function startCall(type){
+    const toUser = currentUser==="Chand6202"?"Anuradha8877":"Chand6202";
+    push(ref(db,"calls"),{from:currentUser,to:toUser,type:type,status:"ringing",timestamp:Date.now()});
   }
-  window.startAudioCall = startAudioCall;
+  window.startCall=startCall;
 
-  function startVideoCall(){
-    document.getElementById("incomingCall").style.display="flex";
-    document.getElementById("ringtone").play();
+  function listenCalls(){
+    onChildAdded(ref(db,"calls"),(snap)=>{
+      const call = snap.val();
+      if(call.to===currentUser && call.status==="ringing"){
+        const incoming = document.getElementById("incomingCall");
+        incoming.style.display="flex";
+        document.getElementById("ringtone").play();
+
+        incoming.querySelector(".accept").onclick = ()=>{
+          update(ref(db,"calls/"+snap.key),{status:"accepted"});
+          incoming.style.display="none";
+          document.getElementById("ringtone").pause();
+          alert(`${call.from} ${call.type} call started`);
+        }
+        incoming.querySelector(".reject").onclick = ()=>{
+          update(ref(db,"calls/"+snap.key),{status:"rejected"});
+          incoming.style.display="none";
+          document.getElementById("ringtone").pause();
+        }
+      }
+    });
   }
-  window.startVideoCall = startVideoCall;
-
-  function acceptCall(){
-    document.getElementById("incomingCall").style.display="none";
-    document.getElementById("ringtone").pause();
-    alert("Call Started!");
-  }
-  window.acceptCall = acceptCall;
-
-  function rejectCall(){
-    document.getElementById("incomingCall").style.display="none";
-    document.getElementById("ringtone").pause();
-  }
-  window.rejectCall = rejectCall;
-
 </script>
 </body>
 </html>
