@@ -1,32 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bubble Chat</title>
-<link rel="stylesheet" href="style.css">
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bubble Chat - Chat</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-<div class="container chat-container">
-  <h2>Bubble Chat</h2>
-  <div class="user-list" id="user-list"></div>
-  <div id="chat-box" class="chat-box"></div>
-  <div class="input-area">
-    <input type="text" id="message" placeholder="Type a message">
-    <button id="sendBtn">Send</button>
+  <div class="chat-container">
+    <div class="chat-header">
+      <h2 id="chatWith"></h2>
+    </div>
+    <div class="chat-box" id="chat-box"></div>
+    <div class="chat-input">
+      <input type="text" id="message" placeholder="Type a message...">
+      <button id="sendBtn">Send</button>
+    </div>
   </div>
-  <div class="bubbles"></div>
-</div>
 
 <script>
-const currentUser = localStorage.getItem('user');
-const chatWithUser = localStorage.getItem('chatWith');
-let selectedUser = chatWithUser;
-
 // Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
@@ -40,31 +37,21 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Show only one user button
-document.getElementById('user-list').innerHTML = `<button onclick="selectUser('${chatWithUser}')">${chatWithUser}</button>`;
+// Current user
+const currentUser = localStorage.getItem('user');
+const selectedUser = localStorage.getItem('chatWith');
+document.getElementById('chatWith').innerText = selectedUser;
 
-// Chat ID
-function getChatId(u1,u2){ return [u1,u2].sort().join('_'); }
-
-// Select user & load chat
-function selectUser(user){
-  selectedUser = user;
-  const chatBox = document.getElementById('chat-box');
-  chatBox.innerHTML = '';
-  const chatRef = db.ref('chats/' + getChatId(currentUser, selectedUser));
-  chatRef.off();
-  chatRef.on('child_added', snapshot => {
-    const data = snapshot.val();
-    appendMessage(data.from, data.message);
-  });
+function getChatId(u1,u2){
+  return [u1,u2].sort().join("_");
 }
 
 // Append message
-function appendMessage(user,msg){
+function appendMessage(user, msg){
   const chatBox = document.getElementById('chat-box');
   const div = document.createElement('div');
   div.className = user===currentUser ? 'message self' : 'message other';
-  div.textContent = msg;
+  div.textContent = msg || "";
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -72,14 +59,29 @@ function appendMessage(user,msg){
 // Send message
 document.getElementById('sendBtn').addEventListener('click', function(){
   const msg = document.getElementById('message').value.trim();
-  if(!msg || !selectedUser) return;
-  const chatRef = db.ref('chats/' + getChatId(currentUser, selectedUser));
-  chatRef.push({ from: currentUser, message: msg });
+  if(!msg) return;
+
+  const chatId = getChatId(currentUser, selectedUser);
+  const chatRef = db.ref('chats/' + chatId);
+
+  chatRef.push({
+    from: currentUser,
+    message: msg,
+    timestamp: Date.now()
+  });
+
   document.getElementById('message').value = '';
 });
 
-// Auto-load
-selectUser(chatWithUser);
+// Load messages
+const chatId = getChatId(currentUser, selectedUser);
+const chatRef = db.ref('chats/' + chatId);
+chatRef.on('child_added', snapshot => {
+  const data = snapshot.val();
+  if(data && data.message){
+    appendMessage(data.from, data.message);
+  }
+});
 </script>
 </body>
 </html>
