@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chand & Anuradha Chat</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;height:100vh;background:linear-gradient(135deg,#6a11cb,#2575fc);overflow:hidden;}
+.bubble{position:absolute;bottom:-100px;background:rgba(255,255,255,0.2);border-radius:50%;animation:rise 20s infinite ease-in;}
+@keyframes rise{from{transform:translateY(0) scale(1);}to{transform:translateY(-110vh) scale(1.5);}}
+.login-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;flex-direction:column;color:white;z-index:5;}
+.login-overlay input{padding:10px;border-radius:10px;border:none;margin:5px;width:200px;}
+.login-overlay button{padding:10px 15px;border:none;border-radius:10px;background:tomato;color:white;cursor:pointer;}
+.chat-container{width:95%;max-width:420px;background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);border-radius:20px;padding:15px;color:white;box-shadow:0px 0px 20px rgba(0,0,0,0.5);display:flex;flex-direction:column;height:90vh;position:relative;overflow:hidden;display:none;}
+#messages{flex:1;overflow-y:auto;background:rgba(255,255,255,0.2);border-radius:10px;padding:10px;margin-bottom:150px;}
+.message{margin:5px 0;padding:8px 12px;border-radius:10px;display:inline-block;max-width:75%;word-wrap:break-word;position:relative;opacity:0;transform:rotateY(90deg);}
+.message.new{animation:flip 0.6s forwards;}
+@keyframes flip{from{transform:rotateY(90deg);opacity:0;}to{transform:rotateY(0);opacity:1;}}
+.chand{background:#ffcccc;color:black;}
+.anuradha{background:#ccffcc;color:black;}
+.message .tick{position:absolute;bottom:2px;right:4px;font-size:10px;color:green;}
+#typing{font-size:12px;font-style:italic;margin-bottom:5px;color:#ddd;height:15px;}
+video#remoteVideo{width:100%;height:100%;border-radius:8px;position:absolute;top:0;left:0;z-index:1;display:none;}
+video#localVideo{width:150px;height:150px;border-radius:8px;position:absolute;bottom:10px;right:10px;z-index:2;display:none;}
+.input-row{display:flex;gap:5px;align-items:center;position:fixed;bottom:10px;left:50%;transform:translateX(-50%);width:95%;max-width:420px;background:rgba(0,0,0,0.6);padding:5px;border-radius:10px;z-index:10;}
+#messageInput{flex:1;padding:10px;border-radius:10px;border:none;}
+.send-btn{padding:10px 12px;background:tomato;color:white;border:none;border-radius:10px;cursor:pointer;}
+.upload-btn{background:#4CAF50;font-size:18px;}
+.call-row{display:flex;justify-content:space-between;position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:95%;max-width:420px;z-index:9;}
+.call-btn{padding:8px 12px;margin:2px;background:#4CAF50;color:white;border:none;border-radius:8px;cursor:pointer;flex:1;}
+.clear-btn{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);width:95%;max-width:420px;background:crimson;color:white;padding:10px;border:none;border-radius:10px;}
+</style>
+</head>
+<body>
+
+<!-- Bubble Background -->
+<div class="bubble" style="width:40px; height:40px; left:10%; animation-duration:18s;"></div>
+<div class="bubble" style="width:25px; height:25px; left:30%; animation-duration:25s;"></div>
+<div class="bubble" style="width:60px; height:60px; left:70%; animation-duration:22s;"></div>
+<div class="bubble" style="width:15px; height:15px; left:50%; animation-duration:30s;"></div>
+
+<!-- Login Overlay -->
+<div class="login-overlay" id="loginOverlay">
+  <h2>Login Chat</h2>
+  <input type="text" id="usernameInput" placeholder="Chand / Anuradha">
+  <button onclick="login()">Enter Chat</button>
+  <small>Hint: Chand or Anuradha</small>
+</div>
+
+<!-- Chat UI -->
+<div class="chat-container" id="chatContainer">
+  <h2 id="welcome"></h2>
+  <div id="messages"></div>
+  <div id="typing"></div>
+
+  <!-- Call Buttons -->
+  <div class="call-row">
+    <button class="call-btn" onclick="startCall(otherUser,'audio')">Audio Call</button>
+    <button class="call-btn" onclick="startCall(otherUser,'video')">Video Call</button>
+    <button class="call-btn" onclick="endCall()">End Call</button>
+  </div>
+
+  <!-- Clear Chat -->
+  <button class="clear-btn" onclick="clearChat()">🗑 Clear Chat</button>
+
+  <video id="remoteVideo" autoplay playsinline></video>
+  <video id="localVideo" autoplay muted playsinline></video>
+
+  <!-- Input -->
+  <div class="input-row">
+    <input type="text" id="messageInput" placeholder="Type your message..." oninput="showTyping()">
+    <button class="send-btn" onclick="sendMessage()">Send</button>
+    <button class="upload-btn" onclick="document.getElementById('imageInput').click()">📷</button>
+    <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { getDatabase, ref, push, set, onValue, remove, onChildAdded, update } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
+  authDomain: "bubblechat-8b913.firebaseapp.com",
+  databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
+  projectId: "bubblechat-8b913",
+  storageBucket: "bubblechat-8b913.appspot.com",
+  messagingSenderId: "890679022385",
+  appId: "1:890679022385:web:0391f6e09e0efdaa661610"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let username="",otherUser="",localStream,pc,currentCallId;
+
+// Login
+function login(){
+  const input=document.getElementById("usernameInput").value.trim().toLowerCase();
+  if(input==="chand" || input==="chand kishor"){ username="Chand6202"; otherUser="Anuradha8877"; }
+  else if(input==="anuradha" || input==="anuradha8877"){ username="Anuradha8877"; otherUser="Chand6202"; }
+  else { alert("Invalid username! Hint: Chand or Anuradha"); return; }
+  document.getElementById("loginOverlay").style.display="none";
+  document.getElementById("chatContainer").style.display="flex";
+  document.getElementById("welcome").innerText="Welcome, "+username;
+  loadMessages();
+}
+
+// Load Messages with flip animation + read/delivered
+function loadMessages(){
+  const messagesDiv=document.getElementById("messages");
+  const messagesRef=ref(db,"messages");
+  onValue(messagesRef,(snapshot)=>{
+    messagesDiv.innerHTML="";
+    snapshot.forEach((msgSnap,i)=>{
+      const msg=msgSnap.val();
+      const div=document.createElement("div");
+      div.classList.add("message");
+      div.classList.add(msg.user===username?"chand":"anuradha");
+      if(i===snapshot.size-1) div.classList.add("new");
+
+      if(msg.type==="image") div.innerHTML=msg.user+":<br><img src='"+msg.text+"' />";
+      else div.innerText=msg.user+": "+msg.text;
+
+      const tick=document.createElement("span"); tick.classList.add("tick");
+      if(msg.read) tick.innerText="✔✔"; else if(msg.delivered) tick.innerText="✔"; else tick.innerText="";
+      div.appendChild(tick);
+
+      div.oncontextmenu=(e)=>{
+        e.preventDefault();
+        deleteMessage(msgSnap.key,msg.user);
+      }
+
+      messagesDiv.appendChild(div);
+
+      if(msg.user!==username && !msg.delivered){
+        update(ref(db,`messages/${msgSnap.key}`),{delivered:true});
+      }
+    });
+    messagesDiv.scrollTop=messagesDiv.scrollHeight;
+  });
+}
+
+// Send message
+function sendMessage(){
+  const text=document.getElementById("messageInput").value.trim();
+  if(!text) return;
+  const newMsgRef=push(ref(db,"messages"));
+  set(newMsgRef,{ user:username,text:text,type:"text",delivered:false,read:false });
+  document.getElementById("messageInput").value="";
+  hideTyping();
+}
+// Send Image
+function sendImage(event) {
+  const file = event.target.files[0]; // user selected file
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // push new message to Firebase
+    const newMsgRef = push(ref(db, "messages"));
+    set(newMsgRef, {
+      user: username,       // current user
+      text: e.target.result, // base64 image
+      type: "image",
+      delivered: false,
+      read: false
+    });
+  }
+  reader.readAsDataURL(file); // convert image to base64 string
+}
+
+if(!file) return;
+const reader=new FileReader();
+reader.onload=function(e){
+  const newMsgRef=push(ref(db,"messages"));
+  set(newMsgRef,{ user:username,text:e.target.result,type:"image",delivered:false,read:false });
+}
+reader.readAsDataURL(file);
+}
+
+// Delete message logic
+function deleteMessage(key,msgUser){
+  if(confirm("Delete this message?")){
+    if(username==="Chand6202"){
+      remove(ref(db,`messages/${key}`)); // delete for both
+    } else if(username==="Anuradha8877"){
+      if(msgUser===username) remove(ref(db,`messages/${key}`)); // only self
+      else alert("You can only delete your own messages!");
+    }
+  }
+}
+
+// Clear chat
+function clearChat(){ if(confirm("Clear chat for your side only?")) remove(ref(db,"messages")); }
+
+// Typing indicator
+function showTyping(){ set(ref(db,"typing"),username+" is typing..."); }
+function hideTyping(){ remove(ref(db,"typing")); }
+onValue(ref(db,"typing"),snap=>{ document.getElementById("typing").innerText=snap.val()!==username+" is typing..."?snap.val():""; });
+
+// WebRTC Call
+async function startCall(toUser,type="audio"){
+  if(currentCallId){ alert("Already in call!"); return; }
+  currentCallId=push(ref(db,"calls")).key;
+  pc=new RTCPeerConnection();
+  localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:type==="video"});
+  localStream.getTracks().forEach(track=>pc.addTrack(track,localStream));
+  document.getElementById("localVideo").srcObject=localStream; document.getElementById("localVideo").style.display="block";
+  pc.ontrack=e=>{ document.getElementById("remoteVideo").srcObject=e.streams[0]; document.getElementById("remoteVideo").style.display="block"; }
+  pc.onicecandidate=e=>{ if(e.candidate) push(ref(db,`calls/${currentCallId}/candidates`), e.candidate.toJSON()); }
+  const offer=await pc.createOffer(); await pc.setLocalDescription(offer);
+  set(ref(db,`calls/${currentCallId}`),{ from:username,to:toUser,type:type,status:"ringing",offer:offer.toJSON() });
+  onValue(ref(db,`calls/${currentCallId}/answer`),async snap=>{ if(snap.exists()) await pc.setRemoteDescription(new RTCSessionDescription(snap.val())); });
+  onChildAdded(ref(db,`calls/${currentCallId}/candidates`),snap=>{ pc.addIceCandidate(new RTCIceCandidate(snap.val())); });
+}
+
+// Accept incoming calls
+onValue(ref(db,"calls"),snap=>{
+  snap.forEach(callSnap=>{
+    const call=callSnap.val();
+    if(call.to===username && call.status==="ringing" && !currentCallId){
+      const accept=confirm(`${call.from} is calling (${call.type}). Accept?`);
+      if(accept) acceptCall(callSnap.key,call); else update(ref(db,`calls/${callSnap.key}`),{status:"rejected"});
+    }
+  });
+});
+
+async function acceptCall(callId,call){
+  currentCallId=callId;
+  pc=new RTCPeerConnection();
+  localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:call.type==="video"});
+  localStream.getTracks().forEach(track=>pc.addTrack(track,localStream));
+  document.getElementById("localVideo").srcObject=localStream; document.getElementById("localVideo").style.display="block";
+  pc.ontrack=e=>{ document.getElementById("remoteVideo").srcObject=e.streams[0]; document.getElementById("remoteVideo").style.display="block"; }
+  pc.onicecandidate=e=>{ if(e.candidate) push(ref(db,`calls/${currentCallId}/candidates`), e.candidate.toJSON()); }
+  await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
+  const answer=await pc.createAnswer(); await pc.setLocalDescription(answer);
+  update(ref(db,`calls/${currentCallId}`),{answer:answer.toJSON(),status:"accepted"});
+  onChildAdded(ref(db,`calls/${currentCallId}/candidates`),snap=>{ pc.addIceCandidate(new RTCIceCandidate(snap.val())); });
+}
+
+// End Call
+function endCall(){
+  if(pc){ pc.close(); pc=null; currentCallId=null;
+    if(localStream){ localStream.getTracks().forEach(track=>track.stop()); localStream=null; }
+    document.getElementById("localVideo").srcObject=null; document.getElementById("remoteVideo").srcObject=null;
+    document.getElementById("localVideo").style.display="none"; document.getElementById("remoteVideo").style.display="none";
+  }
+}
+</script>
