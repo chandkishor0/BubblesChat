@@ -3,91 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bubble Chat - Chat</title>
-  <link rel="stylesheet" href="style.css">
-
+  <title>Bubble Chat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg,#4e54c8,#8f94fb);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 10px;
+      text-align: center;
+      background: rgba(0,0,0,0.2);
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    #messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .msg {
+      padding: 8px 12px;
+      margin: 5px;
+      border-radius: 12px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+    .me { 
+      align-self: flex-end;
+      background: #4CAF50;
+      color: white;
+    }
+    .other { 
+      align-self: flex-start;
+      background: #ddd;
+      color: black;
+    }
+    footer {
+      display: flex;
+      padding: 8px;
+      background: white;
+    }
+    footer input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      outline: none;
+    }
+    footer button {
+      margin-left: 8px;
+      padding: 10px 15px;
+      border: none;
+      background: #4e54c8;
+      color: white;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    footer button:active { background: #3b3fa5; }
+  </style>
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
-  <div class="chat-container">
-    <div class="chat-header">
-      <h2 id="chatWith"></h2>
-    </div>
-    <div class="chat-box" id="chat-box"></div>
-    <div class="chat-input">
-      <input type="text" id="message" placeholder="Type a message...">
-      <button id="sendBtn">Send</button>
-    </div>
-  </div>
+  <header id="chatHeader">Chat</header>
+  <div id="messages"></div>
+  <footer>
+    <input id="msgInput" type="text" placeholder="Type a message...">
+    <button onclick="sendMsg()">➤</button>
+  </footer>
 
-<script>
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
-  authDomain: "bubblechat-8b913.firebaseapp.com",
-  databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
-  projectId: "bubblechat-8b913",
-  storageBucket: "bubblechat-8b913.appspot.com",
-  messagingSenderId: "890679022385",
-  appId: "1:890679022385:web:0391f6e09e0efdaa661610"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
+      authDomain: "bubblechat-8b913.firebaseapp.com",
+      databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
+      projectId: "bubblechat-8b913",
+      storageBucket: "bubblechat-8b913.appspot.com",
+      messagingSenderId: "890679022385",
+      appId: "1:890679022385:web:0391f6e09e0efdaa661610"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-// Current user
-const currentUser = localStorage.getItem('user');
-const selectedUser = localStorage.getItem('chatWith');
-document.getElementById('chatWith').innerText = selectedUser;
+    const db = firebase.database();
+    const user = localStorage.getItem("user") || "Unknown";
+    const chatWith = localStorage.getItem("chatWith") || "Friend";
+    document.getElementById("chatHeader").innerText = user + " chatting with " + chatWith;
 
-function getChatId(u1,u2){
-  return [u1,u2].sort().join("_");
-}
+    function sendMsg() {
+      const msg = document.getElementById("msgInput").value.trim();
+      if(msg === "") return;
+      const chatRef = db.ref("chats");
+      chatRef.push({ sender: user, text: msg, time: Date.now() });
+      document.getElementById("msgInput").value = "";
+    }
 
-// Append message
-function appendMessage(user, msg){
-  const chatBox = document.getElementById('chat-box');
-  const div = document.createElement('div');
-  div.className = user===currentUser ? 'message self' : 'message other';
-  div.textContent = msg || "[empty]";
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// Send message
-document.getElementById('sendBtn').addEventListener('click', function(){
-  const msg = document.getElementById('message').value.trim();
-  if(!msg) return;
-
-  const chatId = getChatId(currentUser, selectedUser);
-  const chatRef = db.ref('chats/' + chatId);
-
-  const data = {
-    from: currentUser,
-    message: msg,
-    timestamp: Date.now()
-  };
-
-  console.log("SENDING:", data);
-  chatRef.push(data);
-
-  document.getElementById('message').value = '';
-});
-
-// Load messages
-const chatId = getChatId(currentUser, selectedUser);
-const chatRef = db.ref('chats/' + chatId);
-chatRef.on('child_added', snapshot => {
-  const data = snapshot.val();
-  console.log("RECEIVED:", data);
-  if(data && data.message){
-    appendMessage(data.from, data.message);
-  } else {
-    console.warn("⚠️ Message missing:", data);
-  }
-});
-</script>
+    const chatRef = db.ref("chats");
+    chatRef.on("child_added", snapshot => {
+      const data = snapshot.val();
+      const div = document.createElement("div");
+      div.classList.add("msg");
+      if(data.sender === user){
+        div.classList.add("me");
+      } else {
+        div.classList.add("other");
+      }
+      div.innerText = data.sender + ": " + data.text;
+      document.getElementById("messages").appendChild(div);
+      document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+    });
+  </script>
 </body>
 </html>
