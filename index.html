@@ -1,156 +1,486 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chand & Anuradha Chat</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Chand & Anuradha — Love Chat (Firebase + WebRTC)</title>
 <style>
-body {margin:0;height:100vh;display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#ff758c,#ff7eb3);overflow:hidden;font-family:Arial,sans-serif;}
-.bubble{position:absolute;bottom:-100px;width:20px;height:20px;transform:rotate(45deg);animation:rise 20s infinite linear;}
-.bubble::before,.bubble::after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;}
-.bubble::before{top:-10px;left:0;background:rgba(255,255,255,0.3);}
-.bubble::after{left:10px;top:0;background:rgba(255,255,255,0.3);}
-@keyframes rise{0%{transform:translateY(0) rotate(45deg) scale(0.8);opacity:0.7;}50%{opacity:1;}100%{transform:translateY(-110vh) rotate(45deg) scale(1.5);opacity:0;}}
-.chat-container{width:95%;max-width:420px;background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);border-radius:20px;color:white;box-shadow:0 0 20px rgba(0,0,0,0.5);z-index:2;display:flex;flex-direction:column;position:relative;height:90vh;}
-.chat-container h2{text-align:center;margin:0 0 10px 0;font-size:20px;}
-#messages{flex:1;overflow-y:auto;background:rgba(255,255,255,0.1);border-radius:10px 10px 0 0;padding:10px;margin-bottom:0;}
-.message{margin:5px 0;padding:8px 12px;border-radius:12px;display:inline-block;max-width:75%;word-wrap:break-word;position:relative;}
-.message.new{animation:flip 0.6s ease;}
-@keyframes flip{from{transform:rotateY(90deg);opacity:0;}to{transform:rotateY(0);opacity:1;}}
-.chand{background:#ffc0cb;color:black;align-self:flex-start;}
-.anuradha{background:#90ee90;color:black;align-self:flex-end;}
-.timestamp{font-size:10px;color:#eee;display:block;text-align:right;margin-top:3px;}
-.message img{max-width:100%;border-radius:8px;margin-top:5px;}
-.input-row{display:flex;gap:5px;align-items:center;position:sticky;bottom:0;left:0;right:0;padding:10px 15px;background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);border-top-left-radius:15px;border-top-right-radius:15px;z-index:5;}
-#messageInput{flex:1;padding:10px;border:none;border-radius:10px;}
-button{padding:10px 12px;border:none;border-radius:10px;cursor:pointer;}
-.send-btn{background:#ff4757;color:white;}
-.upload-btn{background:#1e90ff;color:white;font-size:18px;}
-.clear-btn{background:crimson;color:white;width:100%;margin-top:6px;}
-#typing{font-size:12px;font-style:italic;margin-bottom:5px;color:#ddd;height:15px;text-align:center;}
-#loginOverlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;justify-content:center;align-items:center;flex-direction:column;z-index:10;}
-#loginOverlay input{padding:12px;border-radius:10px;border:none;margin:5px 0;width:200px;text-align:center;}
-#loginOverlay button{padding:12px 20px;border:none;border-radius:10px;background:#ff4757;color:white;margin-top:10px;cursor:pointer;}
-#loginOverlay h1{color:white;margin-bottom:15px;font-size:26px;text-align:center;}
+  /* ---------- Page & background ---------- */
+  :root { --glass: rgba(0,0,0,0.6); --accent1:#ff758c; --accent2:#ff7eb3; }
+  html,body { height:100%; margin:0; font-family:Arial, sans-serif; background:linear-gradient(135deg,var(--accent1),var(--accent2)); -webkit-font-smoothing:antialiased; }
+  .bubble{position:absolute;bottom:-120px;transform:rotate(45deg);animation:rise 20s infinite linear; z-index:0;}
+  .bubble::before,.bubble::after{content:"";position:absolute;border-radius:50%;}
+  .bubble::before{top:-10px;left:0;background:rgba(255,255,255,0.25);}
+  .bubble::after{left:10px;top:0;background:rgba(255,255,255,0.25);}
+  @keyframes rise{0%{transform:translateY(0) rotate(45deg) scale(.8);opacity:.7}50%{opacity:1}100%{transform:translateY(-110vh) rotate(45deg) scale(1.4);opacity:0}}
+
+  /* ---------- Chat container ---------- */
+  .frame { height:100vh; display:flex; justify-content:center; align-items:center; }
+  .chat-container { width:95%; max-width:420px; height:90vh; background:var(--glass); backdrop-filter:blur(12px); border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,.4); color:white; display:flex; flex-direction:column; position:relative; overflow:hidden; z-index:2; }
+  .header { padding:14px 16px; text-align:center; font-size:20px; font-weight:600; }
+  #messages { flex:1; overflow:auto; padding:12px; background:rgba(255,255,255,0.04); border-radius:10px 10px 0 0; box-sizing:border-box; }
+  .message { display:inline-block; padding:8px 12px; margin:6px 0; border-radius:12px; max-width:75%; word-wrap:break-word; position:relative; }
+  .chand { background:#ffc0cb; color:#000; align-self:flex-start; }
+  .anuradha { background:#90ee90; color:#000; align-self:flex-end; margin-left:auto; }
+  .timestamp { display:block; font-size:10px; color:#eee; margin-top:6px; text-align:right; }
+
+  /* flip animation */
+  .message.new { animation:flip 0.6s ease; transform-origin:center; }
+  @keyframes flip { from{ transform: rotateY(90deg); opacity:0 } to{ transform: rotateY(0); opacity:1 } }
+
+  /* image inside msg */
+  .message img { width:100%; border-radius:8px; margin-top:6px; display:block; }
+
+  /* typing indicator */
+  #typing { text-align:center; font-size:13px; color:#e9e9e9; height:18px; margin:6px 0 0 0; }
+
+  /* sticky input row (mobile friendly) */
+  .input-row { position:sticky; bottom:0; display:flex; gap:8px; padding:10px 12px; align-items:center; background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.6)); backdrop-filter:blur(6px); box-sizing:border-box; }
+  #messageInput { flex:1; padding:10px 12px; border-radius:10px; border:none; outline:none; font-size:15px; }
+  button { border:none; border-radius:10px; padding:9px 12px; cursor:pointer; }
+  .send-btn { background:#ff4757; color:white; }
+  .upload-btn { background:#1e90ff; color:white; font-size:18px; }
+  .call-btn { background:#28a745; color:white; font-size:18px; }
+  .clear-btn { background:crimson; color:white; width:100%; margin:8px 12px 14px 12px; border-radius:10px; padding:10px; }
+
+  /* login overlay */
+  #loginOverlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.75); z-index:50; }
+  #loginCard { width:92%; max-width:360px; padding:20px; border-radius:12px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color:white; text-align:center; }
+  #loginCard h1 { margin:0 0 10px 0; font-size:24px; letter-spacing:0.2px; }
+  #loginCard input { width:80%; padding:10px 12px; border-radius:8px; border:none; margin:8px 0; text-align:center; }
+
+  /* call overlay */
+  #callOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
+  #videos { width:95%; max-width:900px; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
+  video { border-radius:10px; background:#111; display:block; }
+  #localVideo { width:38%; max-width:320px; height:auto; object-fit:cover; }
+  #remoteVideo { width:58%; max-width:520px; height:auto; object-fit:cover; }
+
+  /* responsiveness */
+  @media(max-width:480px){
+    #localVideo{ width:40%; }
+    #remoteVideo{ width:56%; }
+    .message{ max-width:80%; }
+  }
 </style>
 </head>
 <body>
+  <div class="frame">
+    <!-- floating hearts -->
+    <div class="bubble" style="width:30px;height:30px;left:8%;animation-duration:18s;"></div>
+    <div class="bubble" style="width:25px;height:25px;left:30%;animation-duration:22s;"></div>
+    <div class="bubble" style="width:50px;height:50px;left:60%;animation-duration:24s;"></div>
+    <div class="bubble" style="width:18px;height:18px;left:80%;animation-duration:30s;"></div>
 
-<!-- Heart bubbles -->
-<div class="bubble" style="width:30px;height:30px;left:10%;animation-duration:18s;"></div>
-<div class="bubble" style="width:25px;height:25px;left:40%;animation-duration:22s;"></div>
-<div class="bubble" style="width:20px;height:20px;left:70%;animation-duration:25s;"></div>
-<div class="bubble" style="width:35px;height:35px;left:55%;animation-duration:28s;"></div>
+    <div class="chat-container" role="main">
+      <div class="header" id="welcome">Love Chat</div>
+      <div id="messages" aria-live="polite"></div>
+      <div id="typing"></div>
 
-<!-- Login overlay -->
-<div id="loginOverlay">
-<h1>Welcome to Love Chat 💖</h1>
-<input type="text" id="usernameInput" placeholder="Enter your name">
-<button onclick="login()">Enter Chat</button>
-</div>
+      <div class="input-row">
+        <input id="messageInput" placeholder="Type your message..." autocomplete="off" />
+        <button class="send-btn" title="Send" id="sendBtn">Send</button>
+        <button class="upload-btn" title="Send Image" id="imgBtn">📷</button>
+        <input id="imageInput" type="file" accept="image/*" style="display:none"/>
+        <button class="call-btn" title="Voice Call" id="voiceCall">📞</button>
+        <button class="call-btn" title="Video Call" id="videoCall">🎥</button>
+      </div>
 
-<!-- Chat container -->
-<div class="chat-container">
-<h2 id="welcome"></h2>
-<div id="messages"></div>
-<div id="typing"></div>
-<div class="input-row">
-<input type="text" id="messageInput" placeholder="Type your message..." oninput="showTyping()">
-<button class="send-btn" onclick="sendMessage()">Send</button>
-<button class="upload-btn" onclick="document.getElementById('imageInput').click()">📷</button>
-<input type="file" id="imageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
-</div>
-<button class="clear-btn" onclick="clearChat()">🗑 Clear Chat</button>
-</div>
+      <button class="clear-btn" id="clearBtn">🗑 Clear Chat (Admin)</button>
+    </div>
+  </div>
 
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, set, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+  <!-- Login overlay -->
+  <div id="loginOverlay" aria-modal="true" role="dialog">
+    <div id="loginCard">
+      <h1>Welcome to Love Chat 💖</h1>
+      <input id="usernameInput" placeholder="Enter name (Chand Kishor / Anuradha)" />
+      <div style="margin-top:8px;">
+        <button id="enterBtn" style="background:#ff4757;color:white;padding:10px 16px;border-radius:8px;">Enter Chat</button>
+      </div>
+    </div>
+  </div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
-  authDomain: "bubblechat-8b913.firebaseapp.com",
-  databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
-  projectId: "bubblechat-8b913",
-  storageBucket: "bubblechat-8b913.firebasestorage.app",
-  messagingSenderId: "890679022385",
-  appId: "1:890679022385:web:0391f6e09e0efdaa661610"
-};
+  <!-- Call overlay -->
+  <div id="callOverlay">
+    <div id="videos">
+      <video id="localVideo" autoplay muted playsinline></video>
+      <video id="remoteVideo" autoplay playsinline></video>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button id="endCallBtn" style="background:#ff4757;color:white;padding:10px 16px;border-radius:8px;">End Call</button>
+    </div>
+  </div>
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+  <!-- Firebase modular SDK + app script -->
+  <script type="module">
+  /* =================== Firebase imports =================== */
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+  import {
+    getDatabase, ref, push, onChildAdded, onValue, remove, set, child, get
+  } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-const allowedUsers = ["Chand Kishor", "Anuradha"];
-let username;
+  /* =================== CONFIG - replace with your Firebase config if needed =================== */
+  const firebaseConfig = {
+    apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
+    authDomain: "bubblechat-8b913.firebaseapp.com",
+    databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
+    projectId: "bubblechat-8b913",
+    storageBucket: "bubblechat-8b913.firebasestorage.app",
+    messagingSenderId: "890679022385",
+    appId: "1:890679022385:web:0391f6e09e0efdaa661610"
+  };
 
-window.login = function(){
-  const input = document.getElementById("usernameInput").value.trim();
-  if(!allowedUsers.includes(input)){ alert("Only Chand Kishor or Anuradha can enter 💔"); return; }
-  username = input;
-  document.getElementById("loginOverlay").style.display="none";
-  document.querySelector(".chat-container").style.display="flex";
-  document.getElementById("welcome").innerText="Welcome, "+username;
-  listenMessages();
-  listenTyping();
-}
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-window.sendMessage = function(){
-  const input = document.getElementById("messageInput");
-  const text = input.value.trim();
-  if(!text) return;
-  push(ref(db,"messages"), {user:username,text,type:"text",time:Date.now()});
-  input.value="";
-  hideTyping();
-}
+  /* =================== Allowed users =================== */
+  const allowedUsers = ["Chand Kishor", "Anuradha"];
 
-window.sendImage = function(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    push(ref(db,"messages"), {user:username,text:e.target.result,type:"image",time:Date.now()});
+  /* =================== UI references =================== */
+  const loginOverlay = document.getElementById('loginOverlay');
+  const enterBtn = document.getElementById('enterBtn');
+  const usernameInput = document.getElementById('usernameInput');
+  const chatContainer = document.querySelector('.chat-container');
+  const welcomeEl = document.getElementById('welcome');
+  const messagesEl = document.getElementById('messages');
+  const typingEl = document.getElementById('typing');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const imgBtn = document.getElementById('imgBtn');
+  const imageInput = document.getElementById('imageInput');
+  const clearBtn = document.getElementById('clearBtn');
+  const voiceCallBtn = document.getElementById('voiceCall');
+  const videoCallBtn = document.getElementById('videoCall');
+
+  const callOverlay = document.getElementById('callOverlay');
+  const localVideo = document.getElementById('localVideo');
+  const remoteVideo = document.getElementById('remoteVideo');
+  const endCallBtn = document.getElementById('endCallBtn');
+
+  /* =================== State =================== */
+  let username = null;
+  let localStream = null;
+  let pc = null;
+  let currentCallId = null;
+  const iceServers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+  /* ---------- Last seen time (per client) to limit flip animation re-run ---------- */
+  function getLastSeen() {
+    const v = sessionStorage.getItem('lastSeenTime');
+    return v ? parseInt(v,10) : 0;
   }
-  reader.readAsDataURL(file);
-}
+  function setLastSeen(t) { sessionStorage.setItem('lastSeenTime', String(t)); }
 
-window.clearChat = function(){
-  if(confirm("Clear chat for everyone?")){
-    remove(ref(db,"messages"));
+  /* =================== Helpers: UI rendering =================== */
+  function appendMessage(msgObj) {
+    const el = document.createElement('div');
+    el.classList.add('message');
+    el.classList.add(msgObj.user === allowedUsers[0] ? 'chand' : 'anuradha');
+
+    // format time
+    const timeStr = new Date(msgObj.time).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+
+    if (msgObj.type === 'image') {
+      el.innerHTML = `${escapeHtml(msgObj.user)}: <br><img src="${msgObj.text}" alt="image"/><span class="timestamp">${timeStr}</span>`;
+    } else {
+      el.innerHTML = `${escapeHtml(msgObj.user)}: ${escapeHtml(msgObj.text)}<span class="timestamp">${timeStr}</span>`;
+    }
+
+    // animate only if msg.time is newer than lastSeen stored for this client
+    const lastSeen = getLastSeen();
+    if (msgObj.time > lastSeen) {
+      el.classList.add('new');
+    }
+
+    messagesEl.appendChild(el);
   }
-}
 
-window.showTyping = function(){ set(ref(db,"typing"),username+" is typing..."); }
-window.hideTyping = function(){ remove(ref(db,"typing")); }
+  function escapeHtml(s) {
+    if (!s) return '';
+    return s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
 
-function listenMessages(){
-  const messagesDiv = document.getElementById("messages");
-  onValue(ref(db,"messages"), snapshot=>{
-    messagesDiv.innerHTML="";
-    snapshot.forEach(child=>{
-      const msg = child.val();
-      const div = document.createElement("div");
-      div.classList.add("message", msg.user==="Chand Kishor"?"chand":"anuradha");
-      const time = new Date(msg.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-      if(msg.type==="image"){
-        div.innerHTML = msg.user+": <br><img src='"+msg.text+"' /><span class='timestamp'>"+time+"</span>";
-      } else {
-        div.innerHTML = msg.user+": "+msg.text+"<span class='timestamp'>"+time+"</span>";
-      }
-      div.classList.add("new"); // Flip animation
-      messagesDiv.appendChild(div);
+  function scrollToBottom() {
+    messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: 'smooth' });
+    // update last seen time so animation won't repeat afterwards
+    setLastSeen(Date.now());
+  }
+
+  /* =================== Chat: send text & image =================== */
+  async function sendText() {
+    const text = messageInput.value.trim();
+    if (!text) return;
+    const payload = { user: username, text, type: 'text', time: Date.now() };
+    await push(ref(db, 'messages'), payload);
+    messageInput.value = '';
+    hideTyping();
+  }
+
+  function handleImageSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      const payload = { user: username, text: dataUrl, type: 'image', time: Date.now() };
+      await push(ref(db, 'messages'), payload);
+      imageInput.value = '';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* =================== Typing indicator =================== */
+  let typingTimeout = null;
+  function showTyping() {
+    set(ref(db, 'typing'), username + ' is typing...');
+    if (typingTimeout) clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      hideTyping();
+    }, 2000);
+  }
+  function hideTyping() {
+    remove(ref(db, 'typing')).catch(()=>{});
+  }
+
+  /* =================== Listeners: messages & typing =================== */
+  function listenMessages() {
+    // initial load via onValue - we will clear and append in chronological order
+    onValue(ref(db, 'messages'), snapshot => {
+      messagesEl.innerHTML = '';
+      const msgs = [];
+      snapshot.forEach(child => {
+        const v = child.val();
+        msgs.push(v);
+      });
+      // sort by time to be safe
+      msgs.sort((a,b)=>a.time - b.time);
+      msgs.forEach(m => appendMessage(m));
+      scrollToBottom();
     });
-    messagesDiv.scrollTo({top:messagesDiv.scrollHeight, behavior:"smooth"});
-  });
-}
+  }
 
-function listenTyping(){
-  const typingDiv = document.getElementById("typing");
-  onValue(ref(db,"typing"), snapshot=>{
-    const val = snapshot.val();
-    typingDiv.innerText = val && !val.startsWith(username) ? val : "";
+  function listenTyping() {
+    onValue(ref(db, 'typing'), snapshot => {
+      const val = snapshot.val();
+      typingEl.innerText = val && !val.startsWith(username) ? val : '';
+    });
+  }
+
+  /* =================== WebRTC Call / Signaling =================== */
+  // We'll create call entries under /calls/<callId>:
+  // { caller: 'Name', type: 'offer', isVideo: boolean, offer: {sdp,...} } and later /calls/<callId>/answer
+  // ICE candidates live under /callCandidates/<callId>/<pushId> with { candidate, user }
+
+  async function startCall(isVideo) {
+    try {
+      // create peer connection
+      pc = new RTCPeerConnection(iceServers);
+
+      // get user media
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!isVideo });
+      localVideo.srcObject = localStream;
+
+      // attach tracks
+      localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+      // remote track
+      pc.ontrack = (e) => {
+        remoteVideo.srcObject = e.streams[0];
+      };
+
+      // collect ICE and push to DB
+      pc.onicecandidate = (evt) => {
+        if (evt.candidate && currentCallId) {
+          push(ref(db, `callCandidates/${currentCallId}`), { candidate: evt.candidate.toJSON(), user: username });
+        }
+      };
+
+      // create offer
+      const offerDesc = await pc.createOffer();
+      await pc.setLocalDescription(offerDesc);
+
+      // push call entry (offer) and store callId
+      const callRef = push(ref(db, 'calls'));
+      currentCallId = callRef.key;
+      await set(callRef, { caller: username, type: 'offer', isVideo: !!isVideo, offer: offerDesc, time: Date.now() });
+
+      // show overlay
+      callOverlay.style.display = 'flex';
+
+      // listen for answer & candidates
+      listenCallAnswer(currentCallId);
+      listenCallCandidates(currentCallId); // will handle remote candidates
+    } catch (err) {
+      console.error('startCall error', err);
+      alert('Unable to start call. Give camera/mic permission and try again.');
+      cleanupCall();
+    }
+  }
+
+  // When receiving an offer (someone else pushed a call), prompt to accept
+  function listenIncomingOffers() {
+    onChildAdded(ref(db, 'calls'), async (snap) => {
+      const call = snap.val();
+      const callId = snap.key;
+      if (!call || call.caller === username) return; // ignore your own offers
+
+      // If there is already an active pc or call, ignore (or you can prompt busy)
+      if (pc) {
+        // optionally decline by removing call or leaving it - here we ignore
+        console.log('Already in call, ignoring incoming offer');
+        return;
+      }
+
+      const accept = confirm(`${call.caller} is calling ${call.isVideo ? 'with video' : 'voice'}. Accept?`);
+      if (!accept) {
+        // optional: remove the offer if you want callers to get declined status
+        return;
+      }
+
+      try {
+        // create pc and local stream (match isVideo)
+        pc = new RTCPeerConnection(iceServers);
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!call.isVideo });
+        localVideo.srcObject = localStream;
+        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+        pc.ontrack = (e) => remoteVideo.srcObject = e.streams[0];
+
+        pc.onicecandidate = (evt) => {
+          if (evt.candidate) {
+            push(ref(db, `callCandidates/${callId}`), { candidate: evt.candidate.toJSON(), user: username });
+          }
+        };
+
+        // set remote description (offer)
+        await pc.setRemoteDescription(call.offer);
+
+        // create answer
+        const answerDesc = await pc.createAnswer();
+        await pc.setLocalDescription(answerDesc);
+
+        // store answer under the same callId
+        await set(child(ref(db, `calls/${callId}`), 'answer'), answerDesc);
+
+        // set currentCallId and show overlay
+        currentCallId = callId;
+        callOverlay.style.display = 'flex';
+
+        // listen for candidates for this call
+        listenCallCandidates(callId);
+      } catch (err) {
+        console.error('Error answering call', err);
+        cleanupCall();
+      }
+    });
+  }
+
+  // Listen for answer to our offer (caller side)
+  function listenCallAnswer(callId) {
+    const answerRef = child(ref(db, `calls/${callId}`), 'answer');
+    onValue(answerRef, async snap => {
+      const ans = snap.val();
+      if (!ans || !pc) return;
+      try {
+        await pc.setRemoteDescription(ans);
+      } catch (e) { console.warn('setRemoteDescription answer failed', e); }
+    });
+  }
+
+  // Listen for ICE candidates under callCandidates/<callId>
+  function listenCallCandidates(callId) {
+    // initial load and subsequent additions
+    onChildAdded(ref(db, `callCandidates/${callId}`), async (snap) => {
+      const val = snap.val();
+      if (!val || !val.candidate || !pc) return;
+      try {
+        await pc.addIceCandidate(val.candidate);
+      } catch (e) {
+        console.warn('addIceCandidate failed', e);
+      }
+    });
+  }
+
+  // End / cleanup current call
+  async function endCall() {
+    if (pc) { try { pc.close(); } catch(_){} pc = null; }
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    localVideo.srcObject = null; remoteVideo.srcObject = null;
+    callOverlay.style.display = 'none';
+
+    // remove signaling (clean up both call and candidates)
+    if (currentCallId) {
+      try {
+        await remove(ref(db, `calls/${currentCallId}`));
+        await remove(ref(db, `callCandidates/${currentCallId}`));
+      } catch (e) { console.warn('cleanup remote sign', e); }
+      currentCallId = null;
+    }
+  }
+
+  function cleanupCall() { // local reset if something fails
+    if (pc) { try { pc.close(); } catch(_){} pc = null; }
+    if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    localVideo.srcObject = null; remoteVideo.srcObject = null;
+    callOverlay.style.display = 'none';
+    currentCallId = null;
+  }
+
+  /* =================== Event wiring & login =================== */
+  enterBtn.onclick = () => {
+    const input = usernameInput.value.trim();
+    if (!allowedUsers.includes(input)) {
+      alert('Only Chand Kishor or Anuradha can enter 💔');
+      return;
+    }
+    username = input;
+    loginOverlay.style.display = 'none';
+    chatContainer.style.display = 'flex';
+    welcomeEl.textContent = `Welcome, ${username}`;
+    // start listeners
+    listenMessages();
+    listenTyping();
+    listenIncomingOffers();
+    // store lastSeen baseline
+    setLastSeen(Date.now());
+  };
+
+  // send on click or Enter
+  sendBtn.onclick = sendText;
+  messageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendText();
+    }
+    // show typing on any key
+    showTyping();
   });
-}
-</script>
-</body>
-</html>
+
+  imgBtn.onclick = () => imageInput.click();
+  imageInput.addEventListener('change', handleImageSelect);
+
+  clearBtn.onclick = () => {
+    if (!confirm('Clear chat for everyone? This will remove all messages from the database.')) return;
+    remove(ref(db, 'messages')).catch(console.warn);
+  };
+
+  // call buttons
+  voiceCallBtn.onclick = () => startCall(false);
+  videoCallBtn.onclick = () => startCall(true);
+  endCallBtn.onclick = () => endCall();
+
+  // typing hide on page unload
+  window.addEventListener('beforeunload', () => {
+    hideTyping();
+    // also try to end call gracefully
+    endCall().catch(()=>{});
+  });
+
+  // simple helper to push data into DB (text messages)
+  // listenMessages is done above with onValue
+
+  /* =================== Setup DB -> messages listener on initial load =================== */
+  // Implementation uses onValue inside listenMessages() which was wired on enter.
+
+  /* ============
