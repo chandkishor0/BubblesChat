@@ -6,241 +6,220 @@
   <title>Chand & Anuradha Chat</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #6a11cb, #2575fc);
       margin: 0;
-      padding: 0;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
       overflow: hidden;
+      font-family: Arial, sans-serif;
     }
 
-    /* 🔵 Background Bubbles Animation */
-    .bubbles {
+    /* Bubble background */
+    .bubble {
       position: absolute;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      z-index: 0;
-    }
-    .bubbles span {
-      position: absolute;
-      bottom: -150px;
-      background: rgba(255,255,255,0.2);
+      bottom: -100px;
+      background: rgba(255, 255, 255, 0.2);
       border-radius: 50%;
-      animation: rise 20s infinite;
-    }
-    .bubbles span:nth-child(odd) {
-      background: rgba(255,255,255,0.3);
+      animation: rise 20s infinite ease-in;
     }
     @keyframes rise {
-      0% { transform: translateY(0) scale(0); }
-      50% { transform: translateY(-50vh) scale(1); }
-      100% { transform: translateY(-100vh) scale(0); }
+      from { transform: translateY(0) scale(1); }
+      to { transform: translateY(-110vh) scale(1.5); }
     }
 
-    #login, #chat {
-      position: relative;
-      z-index: 1;
-      background: rgba(0,0,0,0.7);
-      padding: 20px;
-      border-radius: 15px;
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-      color: #fff;
+    /* Chat box glass effect */
+    .chat-container {
+      width: 95%;
+      max-width: 420px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 15px;
+      color: white;
+      box-shadow: 0px 0px 20px rgba(0,0,0,0.5);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
     }
-    input, button {
+    .chat-container h2 {
+      margin: 0 0 10px 0;
+      font-size: 20px;
+      text-align: center;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
       padding: 10px;
-      margin: 5px;
-      width: 90%;
+      margin-bottom: 5px;
+    }
+
+    /* Flip animation */
+    .message {
+      margin: 5px 0;
+      padding: 8px 12px;
+      border-radius: 10px;
+      display: inline-block;
+      animation: flip 0.6s ease;
+      max-width: 75%;
+      word-wrap: break-word;
+    }
+    @keyframes flip {
+      from { transform: rotateY(90deg); opacity: 0; }
+      to { transform: rotateY(0); opacity: 1; }
+    }
+
+    .chand { background: #ffcccc; color: black; }
+    .anuradha { background: #ccffcc; color: black; }
+
+    /* Chat image */
+    .message img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-top: 5px;
+    }
+
+    /* Input row */
+    .input-row {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    #messageInput {
+      flex: 1;
+      padding: 10px;
       border: none;
-      border-radius: 5px;
+      border-radius: 10px;
     }
     button {
-      background: #ff5722;
+      padding: 10px 12px;
+      background: tomato;
       color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #e64a19;
-    }
-    #messages {
-      height: 300px;
-      overflow-y: auto;
-      background: rgba(255,255,255,0.9);
-      color: black;
-      padding: 10px;
-      margin-bottom: 10px;
+      border: none;
       border-radius: 10px;
-      text-align: left;
+      cursor: pointer;
     }
-    .msg {
-      display: inline-block;
-      padding: 8px 12px;
-      border-radius: 15px;
-      margin: 5px 0;
-      max-width: 70%;
-      word-wrap: break-word;
-      animation: flipIn 0.5s ease;
-    }
-    .self {
-      background: #d1f5d3;
-      float: right;
-      clear: both;
-    }
-    .other {
-      background: #f5d1d1;
-      float: left;
-      clear: both;
+    .upload-btn {
+      background: #4CAF50;
+      font-size: 18px;
     }
 
-    /* ✨ Flip Animation */
-    @keyframes flipIn {
-      from { transform: rotateY(90deg); opacity: 0; }
-      to { transform: rotateY(0deg); opacity: 1; }
+    /* Typing indicator */
+    #typing {
+      font-size: 12px;
+      font-style: italic;
+      margin-bottom: 5px;
+      color: #ddd;
+      height: 15px;
     }
   </style>
 </head>
 <body>
 
-<!-- 🔵 Background Bubbles -->
-<div class="bubbles">
-  <span style="width:40px;height:40px;left:10%;animation-duration:18s;"></span>
-  <span style="width:25px;height:25px;left:30%;animation-duration:12s;"></span>
-  <span style="width:50px;height:50px;left:50%;animation-duration:20s;"></span>
-  <span style="width:20px;height:20px;left:70%;animation-duration:10s;"></span>
-  <span style="width:35px;height:35px;left:90%;animation-duration:15s;"></span>
-</div>
+  <!-- Bubble background -->
+  <div class="bubble" style="width:40px; height:40px; left:10%; animation-duration:18s;"></div>
+  <div class="bubble" style="width:25px; height:25px; left:30%; animation-duration:25s;"></div>
+  <div class="bubble" style="width:60px; height:60px; left:70%; animation-duration:22s;"></div>
+  <div class="bubble" style="width:15px; height:15px; left:50%; animation-duration:30s;"></div>
 
-<!-- 🔑 Login Box -->
-<div id="login">
-  <h2>Login</h2>
-  <input type="text" id="username" placeholder="Enter your name">
-  <button onclick="login()">Login</button>
-  <p style="color: yellow; font-size: 14px;">(Only Chand Kishor & Anuradha allowed)</p>
-</div>
+  <!-- Chat UI -->
+  <div class="chat-container">
+    <h2 id="welcome"></h2>
+    <div id="messages"></div>
+    <div id="typing"></div>
+    <div class="input-row">
+      <input type="text" id="messageInput" placeholder="Type your message..." oninput="showTyping()" />
+      <button onclick="sendMessage()">Send</button>
+      <button class="upload-btn" onclick="document.getElementById('imageInput').click()">📷</button>
+      <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
+    </div>
+  </div>
 
-<!-- 💬 Chat Box -->
-<div id="chat" style="display:none;">
-  <h2 id="welcome"></h2>
-  <div id="messages"></div>
-  <input type="text" id="messageInput" placeholder="Type your message">
-  <button onclick="sendMessage()">Send</button>
-</div>
+  <script>
+    // ✅ Allowed users
+    const allowedUsers = ["Chand Kishor", "Anuradha"];
+    let username = prompt("Enter your name (Chand Kishor / Anuradha):");
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
-<script>
-  // ✅ Firebase Config (तुम्हारा config)
-  const firebaseConfig = {
-    apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
-    authDomain: "bubblechat-8b913.firebaseapp.com",
-    databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
-    projectId: "bubblechat-8b913",
-    storageBucket: "bubblechat-8b913.firebasestorage.app",
-    messagingSenderId: "890679022385",
-    appId: "1:890679022385:web:0391f6e09e0efdaa661610"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  let currentUser = "";
-
-  function login() {
-    const username = document.getElementById("username").value.trim();
-
-    if(username !== "Chand Kishor" && username !== "Anuradha") {
-      alert("Only Chand Kishor and Anuradha can chat here!");
-      return;
+    if (!allowedUsers.includes(username)) {
+      document.body.innerHTML = "<h1 style='color:white;text-align:center;'>Access Denied ❌</h1>";
+      throw new Error("Not allowed");
     }
 
-    currentUser = username;
-    document.getElementById("login").style.display = "none";
-    document.getElementById("chat").style.display = "block";
     document.getElementById("welcome").innerText = "Welcome, " + username;
-    
-    loadMessages();
-  }
 
-  function sendMessage() {
-    const msgInput = document.getElementById("messageInput");
-    const message = msgInput.value.trim();
+    // Fake DB (localStorage)
+    function loadMessages() {
+      const messagesDiv = document.getElementById("messages");
+      messagesDiv.innerHTML = "";
+      const messages = JSON.parse(localStorage.getItem("chat")) || [];
+      messages.forEach(msg => {
+        const div = document.createElement("div");
+        div.classList.add("message");
+        div.classList.add(msg.user === "Chand Kishor" ? "chand" : "anuradha");
 
-    if(message === "") return;
+        if (msg.type === "image") {
+          div.innerHTML = msg.user + ": <br><img src='" + msg.text + "' />";
+        } else {
+          div.innerText = msg.user + ": " + msg.text;
+        }
 
-    db.ref("messages").push({
-      user: currentUser,
-      text: message,
-      time: Date.now()
-    });
-
-    msgInput.value = "";
-  }
-
-  function loadMessages() {
-    const messagesDiv = document.getElementById("messages");
-    db.ref("messages").on("child_added", snapshot => {
-      const data = snapshot.val();
-      const div = document.createElement("div");
-      div.classList.add("msg");
-      div.classList.add(data.user === currentUser ? "self" : "other");
-      div.innerText = data.user + ": " + data.text;
-      messagesDiv.appendChild(div);
+        messagesDiv.appendChild(div);
+      });
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    });
-  }
-</script>
-
-</body>
-</html>    if(username !== "Chand Kishor" && username !== "Anuradha") {
-      alert("Only Chand Kishor and Anuradha can chat here!");
-      return;
     }
 
-    currentUser = username;
-    document.getElementById("login").style.display = "none";
-    document.getElementById("chat").style.display = "block";
-    document.getElementById("welcome").innerText = "Welcome, " + username;
-    
+    function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+      if (!text) return;
+      const messages = JSON.parse(localStorage.getItem("chat")) || [];
+      messages.push({ user: username, text, type: "text" });
+      localStorage.setItem("chat", JSON.stringify(messages));
+      input.value = "";
+      hideTyping();
+      loadMessages();
+    }
+
+    function sendImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const messages = JSON.parse(localStorage.getItem("chat")) || [];
+        messages.push({ user: username, text: e.target.result, type: "image" });
+        localStorage.setItem("chat", JSON.stringify(messages));
+        loadMessages();
+      }
+      reader.readAsDataURL(file); // convert image to base64
+    }
+
+    // Typing indicator
+    function showTyping() {
+      localStorage.setItem("typing", username + " is typing...");
+    }
+    function hideTyping() {
+      localStorage.removeItem("typing");
+    }
+
+    function checkTyping() {
+      const typing = localStorage.getItem("typing");
+      if (typing && !typing.startsWith(username)) {
+        document.getElementById("typing").innerText = typing;
+      } else {
+        document.getElementById("typing").innerText = "";
+      }
+    }
+
+    // Auto-refresh
+    setInterval(loadMessages, 1000);
+    setInterval(checkTyping, 500);
     loadMessages();
-  }
-
-  function sendMessage() {
-    const msgInput = document.getElementById("messageInput");
-    const message = msgInput.value.trim();
-
-    if(message === "") return;
-
-    db.ref("messages").push({
-      user: currentUser,
-      text: message,
-      time: Date.now()
-    });
-
-    msgInput.value = "";
-  }
-
-  function loadMessages() {
-    const messagesDiv = document.getElementById("messages");
-    db.ref("messages").on("child_added", snapshot => {
-      const data = snapshot.val();
-      const div = document.createElement("div");
-      div.classList.add("msg");
-      div.classList.add(data.user === currentUser ? "self" : "other");
-      div.innerText = data.user + ": " + data.text;
-      messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    });
-  }
-</script>
-
+  </script>
 </body>
 </html>
