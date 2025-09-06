@@ -1,245 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chand & Anuradha Chat</title>
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-
-    /* Bubble background */
-    .bubble {
-      position: absolute;
-      bottom: -100px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
-      animation: rise 20s infinite ease-in;
-    }
-    @keyframes rise {
-      from { transform: translateY(0) scale(1); }
-      to { transform: translateY(-110vh) scale(1.5); }
-    }
-
-    /* Chat box glass effect */
-    .chat-container {
-      width: 95%;
-      max-width: 420px;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(12px);
-      border-radius: 20px;
-      padding: 15px;
-      color: white;
-      box-shadow: 0px 0px 20px rgba(0,0,0,0.5);
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      height: 90vh;
-    }
-    .chat-container h2 {
-      margin: 0 0 10px 0;
-      font-size: 20px;
-      text-align: center;
-    }
-
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      background: rgba(255,255,255,0.2);
-      border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 5px;
-    }
-
-    /* Message styles */
-    .message {
-      margin: 5px 0;
-      padding: 8px 12px;
-      border-radius: 10px;
-      display: inline-block;
-      max-width: 75%;
-      word-wrap: break-word;
-    }
-    /* Flip only on new message */
-    .new {
-      animation: flip 0.6s ease;
-    }
-    @keyframes flip {
-      from { transform: rotateY(90deg); opacity: 0; }
-      to { transform: rotateY(0); opacity: 1; }
-    }
-
-    .chand { background: #ffcccc; color: black; }
-    .anuradha { background: #ccffcc; color: black; }
-
-    /* Chat image */
-    .message img {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-top: 5px;
-    }
-
-    /* Input row */
-    .input-row {
-      display: flex;
-      gap: 5px;
-      align-items: center;
-    }
-    #messageInput {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 10px;
-    }
-    button {
-      padding: 10px 12px;
-      background: tomato;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-    .upload-btn {
-      background: #4CAF50;
-      font-size: 18px;
-    }
-    .clear-btn {
-      background: crimson;
-      width: 100%;
-      margin-top: 6px;
-    }
-
-    /* Typing indicator */
-    #typing {
-      font-size: 12px;
-      font-style: italic;
-      margin-bottom: 5px;
-      color: #ddd;
-      height: 15px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chand & Anuradha Chat</title>
+<style>
+body {margin:0;height:100vh;display:flex;justify-content:center;align-items:center;background:linear-gradient(135deg,#ff758c,#ff7eb3);overflow:hidden;font-family:Arial,sans-serif;}
+.bubble{position:absolute;bottom:-100px;width:20px;height:20px;transform:rotate(45deg);animation:rise 20s infinite linear;}
+.bubble::before,.bubble::after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;}
+.bubble::before{top:-10px;left:0;background:rgba(255,255,255,0.3);}
+.bubble::after{left:10px;top:0;background:rgba(255,255,255,0.3);}
+@keyframes rise{0%{transform:translateY(0) rotate(45deg) scale(0.8);opacity:0.7;}50%{opacity:1;}100%{transform:translateY(-110vh) rotate(45deg) scale(1.5);opacity:0;}}
+.chat-container{width:95%;max-width:420px;background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);border-radius:20px;padding:15px 15px 60px 15px;color:white;box-shadow:0 0 20px rgba(0,0,0,0.5);z-index:2;display:flex;flex-direction:column;height:90vh;position:relative; display:none;}
+.chat-container h2{text-align:center;margin:0 0 10px 0;font-size:20px;}
+#messages{flex:1;overflow-y:auto;background:rgba(255,255,255,0.1);border-radius:10px;padding:10px;margin-bottom:5px;}
+.message{margin:5px 0;padding:8px 12px;border-radius:12px;display:inline-block;max-width:75%;word-wrap:break-word;position:relative;}
+.message.new{animation:flip 0.6s ease;}
+@keyframes flip{from{transform:rotateY(90deg);opacity:0;}to{transform:rotateY(0);opacity:1;}}
+.chand{background:#ffc0cb;color:black;align-self:flex-start;}
+.anuradha{background:#90ee90;color:black;align-self:flex-end;}
+.timestamp{font-size:10px;color:#eee;display:block;text-align:right;margin-top:3px;}
+.message img{max-width:100%;border-radius:8px;margin-top:5px;}
+.input-row{display:flex;gap:5px;align-items:center;position:absolute;bottom:10px;left:15px;right:15px;}
+#messageInput{flex:1;padding:10px;border:none;border-radius:10px;}
+button{padding:10px 12px;border:none;border-radius:10px;cursor:pointer;}
+.send-btn{background:#ff4757;color:white;}
+.upload-btn{background:#1e90ff;color:white;font-size:18px;}
+.clear-btn{background:crimson;color:white;width:100%;margin-top:6px;}
+#typing{font-size:12px;font-style:italic;margin-bottom:5px;color:#ddd;height:15px;text-align:center;}
+#loginOverlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;justify-content:center;align-items:center;flex-direction:column;z-index:10;}
+#loginOverlay input{padding:12px;border-radius:10px;border:none;margin:5px 0;width:200px;text-align:center;}
+#loginOverlay button{padding:12px 20px;border:none;border-radius:10px;background:#ff4757;color:white;margin-top:10px;cursor:pointer;}
+#loginOverlay h1{color:white;margin-bottom:15px;font-size:26px;text-align:center;}
+</style>
 </head>
 <body>
 
-  <!-- Bubble background -->
-  <div class="bubble" style="width:40px; height:40px; left:10%; animation-duration:18s;"></div>
-  <div class="bubble" style="width:25px; height:25px; left:30%; animation-duration:25s;"></div>
-  <div class="bubble" style="width:60px; height:60px; left:70%; animation-duration:22s;"></div>
-  <div class="bubble" style="width:15px; height:15px; left:50%; animation-duration:30s;"></div>
+<!-- Heart bubbles -->
+<div class="bubble" style="width:30px;height:30px;left:10%;animation-duration:18s;"></div>
+<div class="bubble" style="width:25px;height:25px;left:40%;animation-duration:22s;"></div>
+<div class="bubble" style="width:20px;height:20px;left:70%;animation-duration:25s;"></div>
+<div class="bubble" style="width:35px;height:35px;left:55%;animation-duration:28s;"></div>
 
-  <!-- Chat UI -->
-  <div class="chat-container">
-    <h2 id="welcome"></h2>
-    <div id="messages"></div>
-    <div id="typing"></div>
-    <div class="input-row">
-      <input type="text" id="messageInput" placeholder="Type your message..." oninput="showTyping()" />
-      <button onclick="sendMessage()">Send</button>
-      <button class="upload-btn" onclick="document.getElementById('imageInput').click()">📷</button>
-      <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
-    </div>
-    <button class="clear-btn" onclick="clearChat()">🗑 Clear Chat</button>
-  </div>
+<!-- Login overlay -->
+<div id="loginOverlay">
+<h1>Welcome to Love Chat 💖</h1>
+<input type="text" id="usernameInput" placeholder="Enter your name">
+<button onclick="login()">Enter Chat</button>
+</div>
 
-  <script>
-    // ✅ Only these two users
-    const allowedUsers = ["Chand Kishor", "Anuradha"];
-    let username = prompt("Enter your name (Chand Kishor / Anuradha):");
+<!-- Chat container -->
+<div class="chat-container">
+<h2 id="welcome"></h2>
+<div id="messages"></div>
+<div id="typing"></div>
+<div class="input-row">
+<input type="text" id="messageInput" placeholder="Type your message..." oninput="showTyping()">
+<button class="send-btn" onclick="sendMessage()">Send</button>
+<button class="upload-btn" onclick="document.getElementById('imageInput').click()">📷</button>
+<input type="file" id="imageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
+</div>
+<button class="clear-btn" onclick="clearChat()">🗑 Clear Chat</button>
+</div>
 
-    if (!allowedUsers.includes(username)) {
-      document.body.innerHTML = "<h1 style='color:white;text-align:center;'>Access Denied ❌</h1>";
-      throw new Error("Not allowed");
-    }
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { getDatabase, ref, push, onValue, set, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-    document.getElementById("welcome").innerText = "Welcome, " + username;
+const firebaseConfig = {
+  apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
+  authDomain: "bubblechat-8b913.firebaseapp.com",
+  databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
+  projectId: "bubblechat-8b913",
+  storageBucket: "bubblechat-8b913.firebasestorage.app",
+  messagingSenderId: "890679022385",
+  appId: "1:890679022385:web:0391f6e09e0efdaa661610"
+};
 
-    // Fake DB (localStorage shared by browser)
-    function loadMessages() {
-      const messagesDiv = document.getElementById("messages");
-      messagesDiv.innerHTML = "";
-      const messages = JSON.parse(localStorage.getItem("chat")) || [];
-      messages.forEach((msg, i) => {
-        const div = document.createElement("div");
-        div.classList.add("message");
-        div.classList.add(msg.user === "Chand Kishor" ? "chand" : "anuradha");
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-        // Only last 1 new msg gets flip animation
-        if (i === messages.length - 1) {
-          div.classList.add("new");
-        }
+const allowedUsers = ["Chand Kishor", "Anuradha"];
+let username;
 
-        if (msg.type === "image") {
-          div.innerHTML = msg.user + ": <br><img src='" + msg.text + "' />";
-        } else {
-          div.innerText = msg.user + ": " + msg.text;
-        }
+window.login = function(){
+  const input = document.getElementById("usernameInput").value.trim();
+  if(!allowedUsers.includes(input)){ alert("Only Chand Kishor or Anuradha can enter 💔"); return; }
+  username = input;
+  document.getElementById("loginOverlay").style.display="none";
+  document.querySelector(".chat-container").style.display="flex";
+  document.getElementById("welcome").innerText="Welcome, "+username;
+  listenMessages();
+  listenTyping();
+}
 
-        messagesDiv.appendChild(div);
-      });
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
+window.sendMessage = function(){
+  const input = document.getElementById("messageInput");
+  const text = input.value.trim();
+  if(!text) return;
+  push(ref(db,"messages"), {user:username,text,type:"text",time:Date.now()});
+  input.value="";
+  hideTyping();
+}
 
-    function sendMessage() {
-      const input = document.getElementById("messageInput");
-      const text = input.value.trim();
-      if (!text) return;
-      const messages = JSON.parse(localStorage.getItem("chat")) || [];
-      messages.push({ user: username, text, type: "text" });
-      localStorage.setItem("chat", JSON.stringify(messages));
-      input.value = "";
-      hideTyping();
-      loadMessages();
-    }
+window.sendImage = function(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    push(ref(db,"messages"), {user:username,text:e.target.result,type:"image",time:Date.now()});
+  }
+  reader.readAsDataURL(file);
+}
 
-    function sendImage(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const messages = JSON.parse(localStorage.getItem("chat")) || [];
-        messages.push({ user: username, text: e.target.result, type: "image" });
-        localStorage.setItem("chat", JSON.stringify(messages));
-        loadMessages();
-      }
-      reader.readAsDataURL(file);
-    }
+window.clearChat = function(){
+  if(confirm("Clear chat for everyone?")){
+    remove(ref(db,"messages"));
+  }
+}
 
-    // 🗑 Local clear only
-    function clearChat() {
-      if (confirm("Clear chat on your device only?")) {
-        localStorage.removeItem("chat");
-        loadMessages();
-      }
-    }
+window.showTyping = function(){ set(ref(db,"typing"),username+" is typing..."); }
+window.hideTyping = function(){ remove(ref(db,"typing")); }
 
-    // Typing indicator
-    function showTyping() {
-      localStorage.setItem("typing", username + " is typing...");
-    }
-    function hideTyping() {
-      localStorage.removeItem("typing");
-    }
-    function checkTyping() {
-      const typing = localStorage.getItem("typing");
-      if (typing && !typing.startsWith(username)) {
-        document.getElementById("typing").innerText = typing;
+function listenMessages(){
+  const messagesDiv = document.getElementById("messages");
+  onValue(ref(db,"messages"), snapshot=>{
+    messagesDiv.innerHTML="";
+    snapshot.forEach(child=>{
+      const msg = child.val();
+      const div = document.createElement("div");
+      div.classList.add("message", msg.user==="Chand Kishor"?"chand":"anuradha");
+      const time = new Date(msg.time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      if(msg.type==="image"){
+        div.innerHTML = msg.user+": <br><img src='"+msg.text+"' /><span class='timestamp'>"+time+"</span>";
       } else {
-        document.getElementById("typing").innerText = "";
+        div.innerHTML = msg.user+": "+msg.text+"<span class='timestamp'>"+time+"</span>";
       }
-    }
+      div.classList.add("new"); // Flip animation
+      messagesDiv.appendChild(div);
+    });
+    messagesDiv.scrollTo({top:messagesDiv.scrollHeight, behavior:"smooth"});
+  });
+}
 
-    // Auto-refresh
-    setInterval(loadMessages, 1000);
-    setInterval(checkTyping, 500);
-    loadMessages();
-  </script>
+function listenTyping(){
+  const typingDiv = document.getElementById("typing");
+  onValue(ref(db,"typing"), snapshot=>{
+    const val = snapshot.val();
+    typingDiv.innerText = val && !val.startsWith(username) ? val : "";
+  });
+}
+</script>
 </body>
 </html>
