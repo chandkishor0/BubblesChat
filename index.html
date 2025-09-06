@@ -59,15 +59,18 @@
       margin-bottom: 5px;
     }
 
-    /* Flip animation */
+    /* Message styles */
     .message {
       margin: 5px 0;
       padding: 8px 12px;
       border-radius: 10px;
       display: inline-block;
-      animation: flip 0.6s ease;
       max-width: 75%;
       word-wrap: break-word;
+    }
+    /* Flip only on new message */
+    .new {
+      animation: flip 0.6s ease;
     }
     @keyframes flip {
       from { transform: rotateY(90deg); opacity: 0; }
@@ -108,6 +111,11 @@
       background: #4CAF50;
       font-size: 18px;
     }
+    .clear-btn {
+      background: crimson;
+      width: 100%;
+      margin-top: 6px;
+    }
 
     /* Typing indicator */
     #typing {
@@ -138,10 +146,11 @@
       <button class="upload-btn" onclick="document.getElementById('imageInput').click()">📷</button>
       <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
     </div>
+    <button class="clear-btn" onclick="clearChat()">🗑 Clear Chat</button>
   </div>
 
   <script>
-    // ✅ Allowed users
+    // ✅ Only these two users
     const allowedUsers = ["Chand Kishor", "Anuradha"];
     let username = prompt("Enter your name (Chand Kishor / Anuradha):");
 
@@ -152,15 +161,20 @@
 
     document.getElementById("welcome").innerText = "Welcome, " + username;
 
-    // Fake DB (localStorage)
+    // Fake DB (localStorage shared by browser)
     function loadMessages() {
       const messagesDiv = document.getElementById("messages");
       messagesDiv.innerHTML = "";
       const messages = JSON.parse(localStorage.getItem("chat")) || [];
-      messages.forEach(msg => {
+      messages.forEach((msg, i) => {
         const div = document.createElement("div");
         div.classList.add("message");
         div.classList.add(msg.user === "Chand Kishor" ? "chand" : "anuradha");
+
+        // Only last 1 new msg gets flip animation
+        if (i === messages.length - 1) {
+          div.classList.add("new");
+        }
 
         if (msg.type === "image") {
           div.innerHTML = msg.user + ": <br><img src='" + msg.text + "' />";
@@ -188,7 +202,6 @@
     function sendImage(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(e) {
         const messages = JSON.parse(localStorage.getItem("chat")) || [];
@@ -196,7 +209,15 @@
         localStorage.setItem("chat", JSON.stringify(messages));
         loadMessages();
       }
-      reader.readAsDataURL(file); // convert image to base64
+      reader.readAsDataURL(file);
+    }
+
+    // 🗑 Local clear only
+    function clearChat() {
+      if (confirm("Clear chat on your device only?")) {
+        localStorage.removeItem("chat");
+        loadMessages();
+      }
     }
 
     // Typing indicator
@@ -206,7 +227,6 @@
     function hideTyping() {
       localStorage.removeItem("typing");
     }
-
     function checkTyping() {
       const typing = localStorage.getItem("typing");
       if (typing && !typing.startsWith(username)) {
