@@ -40,13 +40,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Display only one user button
+// Show only one user button
 document.getElementById('user-list').innerHTML = `<button onclick="selectUser('${chatWithUser}')">${chatWithUser}</button>`;
 
-// Chat ID helper
+// Chat ID
 function getChatId(u1,u2){ return [u1,u2].sort().join('_'); }
 
-// Select user & listen messages
+// Select user & load chat
 function selectUser(user){
   selectedUser = user;
   const chatBox = document.getElementById('chat-box');
@@ -71,14 +71,14 @@ function appendMessage(user,msg){
 
 // Send message
 document.getElementById('sendBtn').addEventListener('click', function(){
-  const msg = document.getElementById('message').value;
+  const msg = document.getElementById('message').value.trim();
   if(!msg || !selectedUser) return;
   const chatRef = db.ref('chats/' + getChatId(currentUser, selectedUser));
   chatRef.push({ from: currentUser, message: msg });
   document.getElementById('message').value = '';
 });
 
-// Initialize
+// Auto-load
 selectUser(chatWithUser);
 </script>
 </body>
