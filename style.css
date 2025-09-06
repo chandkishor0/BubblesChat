@@ -1,0 +1,70 @@
+/* Body & container */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg,#89f7fe,#66a6ff);
+  overflow: hidden;
+}
+.container {
+  width: 90%;
+  max-width: 400px;
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+/* Flip card */
+.flip-card { perspective: 1000px; }
+.flip-card-inner { position: relative; width: 100%; transform-style: preserve-3d; transition: transform 0.8s; }
+.flip-card-inner.flipped { transform: rotateY(180deg); }
+.flip-card-front, .flip-card-back {
+  position: absolute; width: 100%; backface-visibility: hidden;
+  padding: 20px; border-radius: 15px;
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.flip-card-back { transform: rotateY(180deg); }
+
+/* Inputs & buttons */
+input, button {
+  width: 100%; margin: 8px 0; padding: 12px;
+  border-radius: 12px; border: none; font-size:16px;
+}
+button { background-color: #ff6b81; color: #fff; cursor: pointer; transition: 0.3s; }
+button:hover { background-color: #ff4757; }
+.toggle-text { text-align: center; color: #fff; cursor: pointer; margin-top: 10px; }
+
+/* Chat */
+.chat-container { display: flex; flex-direction: column; height: 80vh; }
+.user-list { display:flex; justify-content:space-around; margin-bottom:10px; }
+.chat-box {
+  flex: 1;
+  overflow-y:auto;
+  margin:10px 0;
+  padding:10px;
+  background: rgba(255,255,255,0.1);
+  border-radius:15px;
+  display:flex;
+  flex-direction: column;
+}
+.message { margin:5px 0; padding:10px; border-radius:20px; max-width:75%; word-wrap: break-word; color:#fff; font-weight:500; }
+.message.self { align-self: flex-end; background: linear-gradient(135deg,#70e1f5,#ffd194); text-align:right; }
+.message.other { align-self: flex-start; background: linear-gradient(135deg,#a1c4fd,#c2e9fb); text-align:left; }
+
+/* Input area */
+.input-area { display:flex; gap:10px; }
+#message { flex:1; border-radius: 20px; padding:10px; font-size:16px; }
+
+/* Animated bubbles */
+.bubbles {
+  position:absolute; width:100%; height:100%; top:0; left:0; z-index:-1; overflow:hidden;
+}
+.bubbles::before, .bubbles::after {
+  content:''; position:absolute; border-radius:50%; background: rgba(

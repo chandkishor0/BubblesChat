@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Bubble Chat</title>
+<link rel="stylesheet" href="style.css">
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="flip-card">
+    <div class="flip-card-inner" id="flipCard">
+      <!-- Front (Login) -->
+      <div class="flip-card-front">
+        <h2>Login</h2>
+        <input type="text" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button id="loginBtn">Login</button>
+        <p class="toggle-text" onclick="flipCard()">Signup</p>
+      </div>
+      <!-- Back (Signup placeholder) -->
+      <div class="flip-card-back">
+        <h2>Signup</h2>
+        <input type="text" placeholder="Email">
+        <input type="password" placeholder="Password">
+        <button>Signup</button>
+        <p class="toggle-text" onclick="flipCard()">Login</p>
+      </div>
+    </div>
+  </div>
+  <div class="bubbles"></div>
+</div>
+
+<script>
+// Flip card animation
+function flipCard(){ 
+  document.getElementById('flipCard').classList.toggle('flipped'); 
+}
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyB5C4PYCKfY9Rk7CVPNQ-JHX7iBF-DP4cE",
+  authDomain: "bubblechat-8b913.firebaseapp.com",
+  databaseURL: "https://bubblechat-8b913-default-rtdb.firebaseio.com",
+  projectId: "bubblechat-8b913",
+  storageBucket: "bubblechat-8b913.appspot.com",
+  messagingSenderId: "890679022385",
+  appId: "1:890679022385:web:0391f6e09e0efdaa661610"
+};
+firebase.initializeApp(firebaseConfig);
+
+// Login function
+document.getElementById('loginBtn').addEventListener('click', function(){
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  if((email==="Anuradha@gmail.com" && password==="Chand Kishor") ||
+     (email==="ChandKishor@gmail.com" && password==="Anuradha")) {
+
+    firebase.auth().signInAnonymously()
+    .then(() => {
+      if(email==="Anuradha@gmail.com"){
+        localStorage.setItem('user','Anuradha');
+        localStorage.setItem('chatWith','Chand Kishor');
+      } else {
+        localStorage.setItem('user','Chand Kishor');
+        localStorage.setItem('chatWith','Anuradha');
+      }
+      window.location.href="chat.html";
+    })
+    .catch(error => { alert(error.message); });
+
+  } else {
+    alert("Invalid login!");
+  }
+});
+</script>
+</body>
+</html>
